@@ -85,7 +85,7 @@ int Disassemble8080Op(unsigned char *codebuffer, int pc)
 	case 0x3c: printf("INR    A"); break;
 	case 0x3d: printf("DCR    A"); break;
         case 0x3e: printf("MVI    A,#0x%02x",code[1]); opbytes = 2; break;
-	case 0x3f: printf("CMC") break;
+	case 0x3f: printf("CMC"); break;
 
 	case 0x40: printf("MOV    B,B"); break;
 	case 0x41: printf("MOV    B,C"); break;
@@ -237,7 +237,7 @@ int Disassemble8080Op(unsigned char *codebuffer, int pc)
 	case 0xcc: printf("CZ     $%02x%02x",code[2],code[1]); opbytes = 3; break;
 	case 0xcd: printf("CALL   $%02x%02x",code[2],code[1]); opbytes = 3; break;
 	case 0xce: printf("ACI    $%02x",code[1]); opbytes = 2; break;
-	case 0xcf: printf("RS     1T"); break;
+	case 0xcf: printf("RS     1"); break;
 
 	case 0xd0: printf("RNC"); break;
 	case 0xd1: printf("POP    D"); break;
