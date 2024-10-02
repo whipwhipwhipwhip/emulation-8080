@@ -89,6 +89,8 @@ int Emulate8080p(State8080* state)
 	 * least significant to second register
 	 */
 
+	state->pc += 1;
+
 	switch(*opcode)
 	{
 		case 0x00: // NOP 
@@ -597,6 +599,30 @@ int Emulate8080p(State8080* state)
 			   state->a = answer & 0xff;
 			   }
 			   break;
+		case 0xc2: // JNZ
+			   {
+			   if (state->cc.z == 0)
+				state->pc = opcode[2] << 8 | opcode[1];
+			   else
+				state->pc += 2;
+			   }
+			   break;
+		case 0xc3: // JMP
+			   {
+			   state->pc = opcode[2] << 8 | opcode[1];
+			   }
+			   break;
+		case 0xcc: // CNZ
+			   {
+			   if (state->cc.z == 1)
+            		   	uint16_t ret = state->pc+2;    
+            		   	state->memory[state->sp-1] = (ret >> 8) & 0xff;    
+            		   	state->memory[state->sp-2] = (ret & 0xff);    
+            		   	state->sp = state->sp - 2;    
+            		   	state->pc = (opcode[2] << 8) | opcode[1];    
+			   else
+				state->pc += 2
+            		   }   
 		case 0xc6: // ADI
 			   {
 			   uint16_t s2 = (uint16_t) opcode[1];
@@ -606,6 +632,33 @@ int Emulate8080p(State8080* state)
 			   state->pc++;
 			   }
 			   break;
+		case 0xca: // JZ
+			   {
+			   if (state->cc.z == 1)
+				state->pc = opcode[2] << 8 | opcode[1];
+			   else
+				state->pc += 2;
+			   }
+			   break;
+		case 0xcc: // CZ
+			   {
+			   if (state->cc.z == 0)
+            		   	uint16_t ret = state->pc+2;    
+            		   	state->memory[state->sp-1] = (ret >> 8) & 0xff;    
+            		   	state->memory[state->sp-2] = (ret & 0xff);    
+            		   	state->sp = state->sp - 2;    
+            		   	state->pc = (opcode[2] << 8) | opcode[1];    
+			   else
+				state->pc += 2
+            		   }   
+		case 0xcd: // CALL
+			   {    
+            		   uint16_t ret = state->pc+2;    
+            		   state->memory[state->sp-1] = (ret >> 8) & 0xff;    
+            		   state->memory[state->sp-2] = (ret & 0xff);    
+            		   state->sp = state->sp - 2;    
+            		   state->pc = (opcode[2] << 8) | opcode[1];    
+            		   }    
 		case 0xce: // ACI
 			   {
 			   uint16_t s2 = (uint16_t) opcode[1] + state->cc.cy;
@@ -615,6 +668,25 @@ int Emulate8080p(State8080* state)
 			   state->pc++;
 			   }
 			   break;
+		case 0xd2: // JNC
+			   {
+			   if (state->cc.cy == 0)
+				state->pc = opcode[2] << 8 | opcode[1];
+			   else
+				state->pc += 2;
+			   }
+			   break;
+		case 0xd4: // CNC
+			   {
+			   if (state->cc.cy == 0)
+            		   	uint16_t ret = state->pc+2;    
+            		   	state->memory[state->sp-1] = (ret >> 8) & 0xff;    
+            		   	state->memory[state->sp-2] = (ret & 0xff);    
+            		   	state->sp = state->sp - 2;    
+            		   	state->pc = (opcode[2] << 8) | opcode[1];    
+			   else
+				state->pc += 2
+            		   }   
 		case 0xd6: // SUI
 			   {
 			   uint16_t s2 = ~((uint16_t) opcode[1]) + 1;
@@ -624,6 +696,25 @@ int Emulate8080p(State8080* state)
 			   state->pc++;
 			   }
 			   break;
+		case 0xda: // JC
+			   {
+			   if (state->cc.cy == 1)
+				state->pc = opcode[2] << 8 | opcode[1];
+			   else
+				state->pc += 2;
+			   }
+			   break;
+		case 0xdc: // CC
+			   {
+			   if (state->cc.cy == 1)
+            		   	uint16_t ret = state->pc+2;    
+            		   	state->memory[state->sp-1] = (ret >> 8) & 0xff;    
+            		   	state->memory[state->sp-2] = (ret & 0xff);    
+            		   	state->sp = state->sp - 2;    
+            		   	state->pc = (opcode[2] << 8) | opcode[1];    
+			   else
+				state->pc += 2
+            		   }    
 		case 0xde: // SBI
 			   {
 			   uint16_t s2 = ~((uint16_t) opcode[1] + state->cc.cy) + 1
@@ -633,5 +724,80 @@ int Emulate8080p(State8080* state)
 			   state->pc++;
 			   }
 			   break;
+		case 0xe2: // JPO
+			   {
+			   if (state->cc.p == 1)
+				state->pc = opcode[2] << 8 | opcode[1];
+			   else
+				state->pc += 2;
+			   }
+			   break;
+		case 0xcc: // CPO
+			   {
+			   if (state->cc.p == 0)
+            		   	uint16_t ret = state->pc+2;    
+            		   	state->memory[state->sp-1] = (ret >> 8) & 0xff;    
+            		   	state->memory[state->sp-2] = (ret & 0xff);    
+            		   	state->sp = state->sp - 2;    
+            		   	state->pc = (opcode[2] << 8) | opcode[1];    
+			   else
+				state->pc += 2
+            		   }   
+		case 0xea: // JPE
+			   {
+			   if (state->cc.p == 1)
+				state->pc = opcode[2] << 8 | opcode[1];
+			   else
+				state->pc += 2;
+			   }
+			   break;
+		case 0xec: // CPE
+			   {
+			   if (state->cc.p == 1)
+            		   	uint16_t ret = state->pc+2;    
+            		   	state->memory[state->sp-1] = (ret >> 8) & 0xff;    
+            		   	state->memory[state->sp-2] = (ret & 0xff);    
+            		   	state->sp = state->sp - 2;    
+            		   	state->pc = (opcode[2] << 8) | opcode[1];    
+			   else
+				state->pc += 2
+            		   }   
+		case 0xf2: // JP
+			   {
+			   if (state->cc.s == 0)
+				state->pc = opcode[2] << 8 | opcode[1];
+			   else
+				state->pc += 2;
+			   }
+			   break;
+		case 0xf4: // CP
+			   {
+			   if (state->cc.s == 0)
+            		   	uint16_t ret = state->pc+2;    
+            		   	state->memory[state->sp-1] = (ret >> 8) & 0xff;    
+            		   	state->memory[state->sp-2] = (ret & 0xff);    
+            		   	state->sp = state->sp - 2;    
+            		   	state->pc = (opcode[2] << 8) | opcode[1];    
+			   else
+				state->pc += 2
+            		   }   
+		case 0xfa: // JM
+			   {
+			   if (state->cc.s == 1)
+				state->pc = opcode[2] << 8 | opcode[1];
+			   else
+				state->pc += 2;
+			   }
+			   break;
+		case 0xfc: // CM
+			   {
+			   if (state->cc.s == 1)
+            		   	uint16_t ret = state->pc+2;    
+            		   	state->memory[state->sp-1] = (ret >> 8) & 0xff;    
+            		   	state->memory[state->sp-2] = (ret & 0xff);    
+            		   	state->sp = state->sp - 2;    
+            		   	state->pc = (opcode[2] << 8) | opcode[1];    
+			   else
+				state->pc += 2
+            		   }   
 	}
-	state->pc += 1;
