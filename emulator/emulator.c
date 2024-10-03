@@ -76,7 +76,7 @@ void arithmeticFlags(State8080 *state, uint16_t answer, uint16_t s2)
 uint16_t memoryFromHL(State8080 *state)
 {
 	answer = (state->h << 8) | state->l
-	return answer
+	return state->memory[answer]
 }
 
 int Emulate8080p(State8080* state)
@@ -281,6 +281,11 @@ int Emulate8080p(State8080* state)
 			   state->l = (uint8_t) answer;
 			   }
 			   break;
+		case 0x2f: // CMA
+			   {
+			   state->a = ~state->a;
+		           }
+			   break;	
 		case 0x33: // INX SP
 			   {
 			   state->sp = state->sp + 1;
@@ -599,6 +604,213 @@ int Emulate8080p(State8080* state)
 			   state->a = answer & 0xff;
 			   }
 			   break;
+		case 0xa0: // ANA B
+			   {
+			   state->a = state->a & state->b;
+			   logicFlags(state);
+			   }
+			   break;
+		case 0xa1: // ANA C
+			   {
+			   state->a = state->a & state->c;
+			   logicFlags(state);
+			   }
+			   break;
+		case 0xa2: // ANA D
+			   {
+			   state->a = state->a & state->d;
+			   logicFlags(state);
+			   }
+			   break;
+		case 0xa3: // ANA E
+			   {
+			   state->a = state->a & state->e;
+			   logicFlags(state);
+			   }
+			   break;
+		case 0xa4: // ANA H
+			   {
+			   state->a = state->a & state->h;
+			   logicFlags(state);
+			   }
+			   break;
+		case 0xa5: // ANA L
+			   {
+			   state->a = state->a & state->l;
+			   logicFlags(state);
+			   }
+			   break;
+		case 0xa6: // ANA M
+			   {
+			   state->a = state->a & memoryFromHL(state);
+			   logicFlags(state);
+			   }
+			   break;
+		case 0xa7: // ANA A
+			   {
+			   state->a = state->a & state->a;
+			   logicFlags(state);
+			   }
+			   break;
+		case 0xa8: // XRA B
+			   {
+			   state->a = state->a ^ state->b;
+			   logicFlags(state);
+			   }
+			   break;
+		case 0xa9: // XRA C
+			   {
+			   state->a = state->a ^ state->c;
+			   logicFlags(state);
+			   }
+			   break;
+		case 0xaa: // XRA D
+			   {
+			   state->a = state->a ^ state->d;
+			   logicFlags(state);
+			   }
+			   break;
+		case 0xab: // XRA E
+			   {
+			   state->a = state->a ^ state->e;
+			   logicFlags(state);
+			   }
+			   break;
+		case 0xac: // XRA H
+			   {
+			   state->a = state->a ^ state->h;
+			   logicFlags(state);
+			   }
+			   break;
+		case 0xad: // XRA L
+			   {
+			   state->a = state->a ^ state->l;
+			   logicFlags(state);
+			   }
+			   break;
+		case 0xae: // XRA M
+			   {
+			   state->a = state->a ^ memoryFromHL(state);
+			   logicFlags(state);
+			   }
+			   break;
+		case 0xaf: // XRA A
+			   {
+			   state->a = state->a ^ state->a;
+			   logicFlags(state);
+			   }
+			   break;
+		case 0xb0: // ORA B
+			   {
+			   state->a = state->a | state->b;
+			   logicFlags(state);
+			   }
+			   break;
+		case 0xb1: // ORA C
+			   {
+			   state->a = state->a | state->c;
+			   logicFlags(state);
+			   }
+			   break;
+		case 0xb2: // ORA D
+			   {
+			   state->a = state->a | state->d;
+			   logicFlags(state);
+			   }
+			   break;
+		case 0xb3: // ORA E
+			   {
+			   state->a = state->a | state->e;
+			   logicFlags(state);
+			   }
+			   break;
+		case 0xb4: // ORA H
+			   {
+			   state->a = state->a | state->h;
+			   logicFlags(state);
+			   }
+			   break;
+		case 0xb5: // ORA L
+			   {
+			   state->a = state->a | state->l;
+			   logicFlags(state);
+			   }
+			   break;
+		case 0xb6: // ORA M
+			   {
+			   state->a = state->a | memoryFromHL(state);
+			   logicFlags(state);
+			   }
+			   break;
+		case 0xb7: // ORA A
+			   {
+			   state->a = state->a | state->a;
+			   logicFlags(state);
+			   }
+			   break;
+		case 0xb0: // CMP B
+			   {
+			   uint16_t s2 = ~((uint16_t) state->b) + 1;
+			   uint16_t answer = state->a + s2;
+			   arithmeticFlags(state, answer, s2);
+			   }
+			   break;
+		case 0xb1: // CMP C
+			   {
+			   uint16_t s2 = ~((uint16_t) state->c) + 1;
+			   uint16_t answer = state->a + s2;
+			   arithmeticFlags(state, answer, s2);
+			   }
+			   break;
+		case 0xb2: // CMP D
+			   {
+			   uint16_t s2 = ~((uint16_t) state->d) + 1;
+			   uint16_t answer = state->a + s2;
+			   arithmeticFlags(state, answer, s2);
+			   }
+			   break;
+		case 0xb3: // CMP E
+			   {
+			   uint16_t s2 = ~((uint16_t) state->e) + 1;
+			   uint16_t answer = state->a + s2;
+			   arithmeticFlags(state, answer, s2);
+			   }
+			   break;
+		case 0xb4: // CMP H
+			   {
+			   uint16_t s2 = ~((uint16_t) state->h) + 1;
+			   uint16_t answer = state->a + s2;
+			   arithmeticFlags(state, answer, s2);
+			   }
+			   break;
+		case 0xb5: // CMP L
+			   {
+			   uint16_t s2 = ~((uint16_t) state->l) + 1;
+			   uint16_t answer = state->a + s2;
+			   arithmeticFlags(state, answer, s2);
+			   }
+			   break;
+		case 0xb6: // CMP M
+			   {
+			   uint16_t s2 = ~((uint16_t) memoryFromHL(state)) + 1;
+			   uint16_t answer = state->a + s2;
+			   arithmeticFlags(state, answer, s2);
+			   }
+			   break;
+		case 0xb7: // CMP A
+			   {
+			   uint16_t s2 = ~((uint16_t) state->a) + 1;
+			   uint16_t answer = state->a + s2;
+			   arithmeticFlags(state, answer, s2);
+			   }
+			   break;
+		case 0xc0: // RNZ
+			   {
+			   if (state->cc.z == 0)
+			   	state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
+			   	state->sp += 2;
+			   }
+			   break;
 		case 0xc2: // JNZ
 			   {
 			   if (state->cc.z == 0)
@@ -632,6 +844,26 @@ int Emulate8080p(State8080* state)
 			   state->pc++;
 			   }
 			   break;
+		case 0xc7: // RST 0
+			   {
+			   uint16_t push = state->pc+2;
+			   state->memory[state->sp-1] = push >> 8 & 0xff;
+			   state->memory[state->sp-2] = push & 0xff;
+			   state->sp -= 2;
+			   state->pc = 0x0000;
+			   }
+			   break;
+		case 0xc8: // RZ
+			   {
+			   if (state->cc.z == 1)
+			   	state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
+			   	state->sp += 2;
+			   }
+			   break;
+		case 0xc9: // RET
+			   state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
+			   state->sp += 2; 
+			   break;
 		case 0xca: // JZ
 			   {
 			   if (state->cc.z == 1)
@@ -651,6 +883,7 @@ int Emulate8080p(State8080* state)
 			   else
 				state->pc += 2
             		   }   
+			   break;
 		case 0xcd: // CALL
 			   {    
             		   uint16_t ret = state->pc+2;    
@@ -659,6 +892,7 @@ int Emulate8080p(State8080* state)
             		   state->sp = state->sp - 2;    
             		   state->pc = (opcode[2] << 8) | opcode[1];    
             		   }    
+			   break;
 		case 0xce: // ACI
 			   {
 			   uint16_t s2 = (uint16_t) opcode[1] + state->cc.cy;
@@ -666,6 +900,22 @@ int Emulate8080p(State8080* state)
 			   arithmeticFlags(state, answer, s2);
 			   state->a = answer & 0xff;
 			   state->pc++;
+			   }
+			   break;
+		case 0xc7: // RST 1
+			   {
+			   uint16_t push = state->pc+2;
+			   state->memory[state->sp-1] = push >> 8 & 0xff;
+			   state->memory[state->sp-2] = push & 0xff;
+			   state->sp -= 2;
+			   state->pc = 0x0008;
+			   }
+			   break;
+		case 0xd0: // RNC
+			   {
+			   if (state->cc.cy == 0)
+			   	state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
+			   	state->sp += 2;
 			   }
 			   break;
 		case 0xd2: // JNC
@@ -687,6 +937,7 @@ int Emulate8080p(State8080* state)
 			   else
 				state->pc += 2
             		   }   
+			   break;
 		case 0xd6: // SUI
 			   {
 			   uint16_t s2 = ~((uint16_t) opcode[1]) + 1;
@@ -694,6 +945,22 @@ int Emulate8080p(State8080* state)
 			   arithmeticFlags(state, answer, s2);
 			   state->a = answer & 0xff;
 			   state->pc++;
+			   }
+			   break;
+		case 0xd7: // RST 2
+			   {
+			   uint16_t push = state->pc+2;
+			   state->memory[state->sp-1] = push >> 8 & 0xff;
+			   state->memory[state->sp-2] = push & 0xff;
+			   state->sp -= 2;
+			   state->pc = 0x0010;
+			   }
+			   break;
+		case 0xd8: // RC
+			   {
+			   if (state->cc.cy == 1)
+			   	state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
+			   	state->sp += 2;
 			   }
 			   break;
 		case 0xda: // JC
@@ -715,6 +982,7 @@ int Emulate8080p(State8080* state)
 			   else
 				state->pc += 2
             		   }    
+			   break;
 		case 0xde: // SBI
 			   {
 			   uint16_t s2 = ~((uint16_t) opcode[1] + state->cc.cy) + 1
@@ -722,6 +990,22 @@ int Emulate8080p(State8080* state)
 			   arithmeticFlags(state, answer, s2);
 			   state->a = answer & 0xff;
 			   state->pc++;
+			   }
+			   break;
+		case 0xdf: // RST 3
+			   {
+			   uint16_t push = state->pc+2;
+			   state->memory[state->sp-1] = push >> 8 & 0xff;
+			   state->memory[state->sp-2] = push & 0xff;
+			   state->sp -= 2;
+			   state->pc = 0x0018;
+			   }
+			   break;
+		case 0xd8: // RPO
+			   {
+			   if (state->cc.p == 0)
+			   	state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
+			   	state->sp += 2;
 			   }
 			   break;
 		case 0xe2: // JPO
@@ -732,7 +1016,7 @@ int Emulate8080p(State8080* state)
 				state->pc += 2;
 			   }
 			   break;
-		case 0xcc: // CPO
+		case 0xe4: // CPO
 			   {
 			   if (state->cc.p == 0)
             		   	uint16_t ret = state->pc+2;    
@@ -743,6 +1027,28 @@ int Emulate8080p(State8080* state)
 			   else
 				state->pc += 2
             		   }   
+			   break;
+		case 0xe7: // RST 4
+			   {
+			   uint16_t push = state->pc+2;
+			   state->memory[state->sp-1] = push >> 8 & 0xff;
+			   state->memory[state->sp-2] = push & 0xff;
+			   state->sp -= 2;
+			   state->pc = 0x0020;
+			   }
+			   break;
+		case 0xe8: // RPE
+			   {
+			   if (state->cc.p == 1)
+			   	state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
+			   	state->sp += 2;
+			   }
+			   break;
+		case 0xe9: // PCHL
+			   {
+				state->pc = memoryFromHL(state);
+			   }
+			   break;
 		case 0xea: // JPE
 			   {
 			   if (state->cc.p == 1)
@@ -762,6 +1068,23 @@ int Emulate8080p(State8080* state)
 			   else
 				state->pc += 2
             		   }   
+			   break;
+		case 0xef: // RST 5
+			   {
+			   uint16_t push = state->pc+2;
+			   state->memory[state->sp-1] = push >> 8 & 0xff;
+			   state->memory[state->sp-2] = push & 0xff;
+			   state->sp -= 2;
+			   state->pc = 0x0028;
+			   }
+			   break;
+		case 0xf0: // RP
+			   {
+			   if (state->cc.s == 0)
+			   	state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
+			   	state->sp += 2;
+			   }
+			   break;
 		case 0xf2: // JP
 			   {
 			   if (state->cc.s == 0)
@@ -781,6 +1104,23 @@ int Emulate8080p(State8080* state)
 			   else
 				state->pc += 2
             		   }   
+			   break;
+		case 0xf7: // RST 6
+			   {
+			   uint16_t push = state->pc+2;
+			   state->memory[state->sp-1] = push >> 8 & 0xff;
+			   state->memory[state->sp-2] = push & 0xff;
+			   state->sp -= 2;
+			   state->pc = 0x0030;
+			   }
+			   break;
+		case 0xf8: // RM
+			   {
+			   if (state->cc.s == 1)
+			   	state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
+			   	state->sp += 2;
+			   }
+			   break;
 		case 0xfa: // JM
 			   {
 			   if (state->cc.s == 1)
@@ -800,4 +1140,14 @@ int Emulate8080p(State8080* state)
 			   else
 				state->pc += 2
             		   }   
+			   break;
+		case 0xff: // RST 7
+			   {
+			   uint16_t push = state->pc+2;
+			   state->memory[state->sp-1] = push >> 8 & 0xff;
+			   state->memory[state->sp-2] = push & 0xff;
+			   state->sp -= 2;
+			   state->pc = 0x0038;
+			   }
+			   break;
 	}
