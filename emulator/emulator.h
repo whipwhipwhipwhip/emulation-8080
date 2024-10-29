@@ -1,6 +1,5 @@
 #ifndef EMULATOR_H
 #define EMULATOR_H
-
 #include<stdint.h>
 
 typedef struct ConditionCodes {

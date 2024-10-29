@@ -26,9 +26,9 @@ SpaceInvadersMachine sim;
     double nextInterrupt;
     int whichInterrupt;
 
-    uint8_t shift0;
-    uint8_t shift1;
-    uint8_t shift_offset;
+    uint8_t shift0; //LSB of Space Invaders external shift
+    uint8_t shift1; //MSB
+    uint8_t shift_offset; //offset for external shift hardware
 } SpaceInvadersMachine;
 
 uint8_t InPort(uint8_t port_bit)
@@ -50,7 +50,7 @@ uint8_t InPort(uint8_t port_bit)
     }
 }
 
-uint8_t OutPort(uint8_t port_bit)
+void OutPort(uint8_t port_bit)
 {
     switch(port_bit)
     {
@@ -100,8 +100,19 @@ void init_display() {
     surf = SDL_CreateRGBSurface(0, WIDTH, HEIGHT, 32, 0, 0, 0, 0);
 }
 
+void generate_interrupt(State8080* state, int interrupt_num)
+{
+    //perform "PUSH PC"    
+    Push(state, (state->pc & 0xFF00) >> 8, (state->pc & 0xff));    
+
+    //Set the PC to the low memory vector.    
+    //This is identical to an "RST interrupt_num" instruction.    
+    state->pc = 8 * interrupt_num; 
+}
+
 void run_cpu(long cycles)
 {
+    
     unsigned char *op;
     for (int i = 0; i < cycles; i++)
     {
@@ -123,6 +134,48 @@ void run_cpu(long cycles)
     }
 }
 
+void readFile(char* filename, uint32_t offset)
+{
+	FILE *f= fopen(filename, "rb");
+	if (f==NULL)
+	{
+		printf("error: Couldn't open %s\n", filename);
+		exit(1);
+	}
+	fseek(f, 0L, SEEK_END);
+	int fsize = ftell(f);
+	fseek(f, 0L, SEEK_SET);
+	
+	uint8_t *buffer = &sim->state->memory[offset];
+	fread(buffer, fsize, 1, f);
+	fclose(f);
+}
+
+void doEmulation()
+{
+    int quit = 0;
+    // set to 1Mhz because there are interrupts at the midpoint and end of frame
+    static int clockSpeed = 1e6;
+    static int FPS = 60;
+    uint32_t lastTime = SDL_GetTicks();
+    sim->lastTimer = lastTime;
+    sim->whichInterrupt = 0;
+
+    while (quit == 0)
+    {
+        for(int i = 0; i < 2; i ++)
+        {
+            int cycles = 0;
+            while (cycles < clockSpeed/FPS)
+            {
+                cycles = cycles + Emulate8080p(sim->state);
+            }
+            generate_interrupt(sim->state, i+1);
+        }
+
+    }
+}
+
 
 int main(int argc, char * argv[])
 {
@@ -136,5 +189,7 @@ int main(int argc, char * argv[])
     readFile(argv[2], 0x800);
     readFile(argv[3], 0x1000);
     readFile(argv[4], 0x1800);
+
+    doEmulation();
 
 }
