@@ -64,7 +64,7 @@ uint8_t memoryFromHL(State8080 *state)
 	return state->memory[answer];
 }
 
-# define PRINTOPS 1
+# define PRINTOPS 0
 
 int Emulate8080p(State8080* state)
 {
