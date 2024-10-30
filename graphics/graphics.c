@@ -52,7 +52,7 @@ void DrawGraphics(SpaceInvadersMachine* sim)
             uint8_t cur_bit = hor % 8;
 
             uint16_t cur_mem = readMemoryAt(cur_byte);
-            bool pixelOn = (cur_mem & cur_bit != 0);
+            bool pixelOn = (cur_mem & (1 << cur_bit) != 0);
             //check if bit cur_bit is 1.
             // If so, draw the pixel in accordance to overlay. Otherwise, don't.
             if(pixelOn)
@@ -66,11 +66,9 @@ void DrawGraphics(SpaceInvadersMachine* sim)
 
         // Rotate coordinates counter clockwise
         SDL_RenderDrawPoint(sim_graphics->renderer, vert, 256-hor-1);
-    }
-    }
-    SDL_RenderPresent(sim_graphics->renderer);
         }
     }
+    SDL_RenderPresent(sim_graphics->renderer);
 }
 
 
