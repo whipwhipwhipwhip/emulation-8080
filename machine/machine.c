@@ -6,6 +6,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_timer.h>
 #include "emulator.h"
+#include "machine.h"
 
 #define TITLE "Space Invaders"
 #define HEIGHT 256
@@ -15,21 +16,7 @@ SDL_Surface *surf;
 int resizef;
 SDL_Window *win;
 SDL_Surface *winsurf;
-SpaceInvadersMachine sim;
-
- typedef struct SpaceInvadersMachine {
-	// Colon means use only that number of bits
-	// uint8_t unsigned 8 bit integer
-	State8080 *state;
-
-    double lastTimer;
-    double nextInterrupt;
-    int whichInterrupt;
-
-    uint8_t shift0; //LSB of Space Invaders external shift
-    uint8_t shift1; //MSB
-    uint8_t shift_offset; //offset for external shift hardware
-} SpaceInvadersMachine;
+SpaceInvadersMachine *sim;
 
 uint8_t InPort(uint8_t port_bit)
 {
@@ -61,7 +48,7 @@ void OutPort(uint8_t port_bit)
         // shift data
         case 4:
             sim->shift0 = sim->shift1;
-            sim->shift1 = sim->value;
+            sim->shift1 = sim->shift1;
             break;
     }
     
@@ -165,12 +152,13 @@ void doEmulation()
     {
         for(int i = 0; i < 2; i ++)
         {
+            sim->whichInterrupt = i+1;
             int cycles = 0;
             while (cycles < clockSpeed/FPS)
             {
                 cycles = cycles + Emulate8080p(sim->state);
             }
-            generate_interrupt(sim->state, i+1);
+            generate_interrupt(sim->state, sim->whichInterrupt);
         }
 
     }

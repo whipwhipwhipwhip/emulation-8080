@@ -1,12 +1,14 @@
-#include <SDL2/SDL.h>
+#ifndef GRAPHICS_H
+#define GRAPHICS_H
+//#include <SDL2/SDL.h>
+#include "machine.h"
 
-class SpaceInvadersMachine;
 
-class SDL_Graphics{
+typedef struct SpaceInvadersMachine;
+class SDL_Graphics {
     public:
         void Initialise();
         void DrawGraphics(SpaceInvadersMachine& sim);
-    
-    public:
-        SpaceInvadersMachine* sim;
 };
+
+#endif
