@@ -28,4 +28,6 @@ typedef struct State8080 {
 	uint8_t		int_enable;
 } State8080;
 
+int Emulate8080p(State8080* state);
+
 #endif

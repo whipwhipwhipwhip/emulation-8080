@@ -7,6 +7,7 @@
 #include <SDL2/SDL_timer.h>
 #include "emulator.h"
 #include "machine.h"
+#include "graphics.h"
 
 #define TITLE "Space Invaders"
 #define HEIGHT 256
@@ -33,7 +34,10 @@ uint8_t InPort(uint8_t port_bit)
         {
             uint16_t v = (sim->shift1<<8) | sim->shift0;    
             a = ((v >> (8-sim->shift_offset)) & 0xff); 
+            return a;
         }
+        default:
+            return 0;
     }
 }
 
@@ -56,7 +60,7 @@ void OutPort(uint8_t port_bit)
 
 void init_display() {
     // Init SDL
-    if (SDL_Init(SDL_INIT_VIDEO)) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER)) {
         printf("%s\n", SDL_GetError());
         exit(1);
     }
@@ -89,8 +93,12 @@ void init_display() {
 
 void generate_interrupt(State8080* state, int interrupt_num)
 {
+    uint16_t push = state->pc+2;
+	state->memory[state->sp-1] = push >> 8 & 0xff;
+	state->memory[state->sp-2] = push & 0xff;
+	state->sp -= 2;
     //perform "PUSH PC"    
-    Push(state, (state->pc & 0xFF00) >> 8, (state->pc & 0xff));    
+    //Push(state, (state->pc & 0xFF00) >> 8, (state->pc & 0xff));    
 
     //Set the PC to the low memory vector.    
     //This is identical to an "RST interrupt_num" instruction.    
@@ -117,7 +125,7 @@ void run_cpu(long cycles)
             cycles+=3;
         }
         else
-            cycles += Emulate8080Op(sim->state);
+            cycles += Emulate8080p(sim->state);
     }
 }
 
@@ -156,9 +164,12 @@ void doEmulation()
             int cycles = 0;
             while (cycles < clockSpeed/FPS)
             {
-                cycles = cycles + Emulate8080p(sim->state);
+                cycles += Emulate8080p(sim->state);
             }
             generate_interrupt(sim->state, sim->whichInterrupt);
+            // seg fault in DrawGraphics
+            DrawGraphics(sim);
+            getchar();
         }
 
     }
@@ -168,7 +179,9 @@ void doEmulation()
 int main(int argc, char * argv[])
 {
     // Make emulator file, load into RAM
-    sim->state = calloc(sizeof(State8080), 1);
+    State8080 *testState;
+    sim = (SpaceInvadersMachine *) calloc(1, sizeof(SpaceInvadersMachine));
+    sim->state = (State8080*) calloc(1, sizeof(State8080));
     sim->state->memory = malloc(16 * 0x1000);
 
     init_display();
