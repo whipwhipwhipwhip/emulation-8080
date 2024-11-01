@@ -5,7 +5,8 @@
 #include "emulator.h"
 
 //read file into memory
-void readFile(State8080* state, char filename, uint32_t memoffset)
+/*
+void readFile(State8080* state, char* filename, uint32_t memoffset)
 {    
 
     FILE *f= fopen(filename, "rb");    
@@ -31,11 +32,12 @@ void readFile(State8080* state, char filename, uint32_t memoffset)
     free(buffer);
 
 }
+*/
 
 //return the byte at byte
 uint16_t readMemoryAt(State8080* state, uint16_t byte)
 {
-    return &state->memory[byte];
+    return state->memory[byte];
 }
 
 //do I even use this?

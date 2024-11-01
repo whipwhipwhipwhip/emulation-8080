@@ -64,7 +64,7 @@ uint8_t memoryFromHL(State8080 *state)
 	return state->memory[answer];
 }
 
-# define PRINTOPS 0
+# define PRINTOPS 1
 
 int Emulate8080p(State8080* state)
 {
@@ -77,7 +77,8 @@ int Emulate8080p(State8080* state)
 	 */
 
 	#if PRINTOPS
-    		Disassemble8080p(state->memory, state->pc);
+			printf("%04x\n", opcode);
+    		//Disassemble8080p(state->memory, state->pc);
 	#endif
 	uint16_t prev_pc = state->pc;
 	state->pc += 1;
@@ -1740,7 +1741,7 @@ int Emulate8080p(State8080* state)
 		printf("A $%02x B $%02x C $%02x D $%02x E $%02x H $%02x L $%02x SP %04x, INC %04x\n", state->a, state->b, state->c,
            	state->d, state->e, state->h, state->l, state->sp, state->pc - prev_pc);
 	#endif
-	return 0;
+	return 1;
 }
 
 void ReadFileIntoMemoryAt(State8080* state, char* filename, uint32_t offset)
@@ -1765,30 +1766,4 @@ State8080* Init8080(void)
 	State8080* state = calloc(1,sizeof(State8080));
 	state->memory = malloc(0x10000);  //16K
 	return state;
-}
-
-
-int main (int argc, char**argv)
-{
-	int done = 0;
-	int steps;
-	int vblankcycles = 0;
-	State8080* state = Init8080();
-	
-	ReadFileIntoMemoryAt(state, "invaders.h", 0);
-	ReadFileIntoMemoryAt(state, "invaders.g", 0x800);
-	ReadFileIntoMemoryAt(state, "invaders.f", 0x1000);
-	ReadFileIntoMemoryAt(state, "invaders.e", 0x1800);
-	
-	while (done == 0)
-	{
-		printf("How many steps to perform: ");
-		scanf("%d", &steps);
-		for(int i = 0; i < steps; i++)
-		{
-			done = Emulate8080p(state);
-			if (done != 0) break;
-		}
-	}
-	return 0;
 }

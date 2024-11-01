@@ -13,4 +13,6 @@ typedef struct SDL_Graphics {
     SDL_Renderer * renderer;
 } SDL_Graphics;
 
+void DrawGraphics(SpaceInvadersMachine* sim);
+
 #endif
