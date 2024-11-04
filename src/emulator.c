@@ -118,6 +118,12 @@ int Emulate8080p(State8080* state)
 			   state->pc += 2;
 			   }
 			   break;
+		case 0x02: // STAX B
+			   {
+			   uint16_t memLoc = (state->b << 8) | state->c;
+			   state->memory[memLoc] = state->a;
+			   }
+			   break;
 		case 0x03: // INX B
 			   {
 			   state->c = state->c + 1;
@@ -218,6 +224,12 @@ int Emulate8080p(State8080* state)
 			   state->pc += 2;
 			   }
 			   break;
+		case 0x12: // STAX D
+			   {
+			   uint16_t memLoc = (state->d << 8) | state->e;
+			   state->memory[memLoc] = state->a;
+			   }
+			   break;
 		case 0x13: // INX D
 			   {
 			   state->e++;
@@ -248,6 +260,13 @@ int Emulate8080p(State8080* state)
 			   {
 			   state->d = opcode[1];
 			   state->pc += 1;
+			   }
+			   break;
+		case 0x17: // RAL
+			   {
+			   uint8_t pcy = state->cc.cy;
+			   state->cc.cy = (state->a & 0xf0) >> 7;
+			   state->a = (state->a << 1) | pcy;
 			   }
 			   break;
 		case 0x18: break;
@@ -298,6 +317,13 @@ int Emulate8080p(State8080* state)
 			   state->pc += 1;
 			   }
 			   break;
+		case 0x1f: // RAR
+			   {
+			   uint8_t pcy = state->cc.cy;
+			   state->cc.cy = state->a & 1;
+			   state->a = (state->a >> 1) | (pcy << 7);
+			   }
+			   break;
 		case 0x20: break;
 		case 0x21: // LXI H
 			   {
@@ -313,11 +339,12 @@ int Emulate8080p(State8080* state)
 				state->memory[address+1] = state->h;
 				state->pc += 2;
 			   }
+			   break;
 		case 0x23: // INX H
 			   {
-			   state->l++;
-			   if (state->l == 0)
-				state->h++;
+			    state->l++;
+			    if (state->l == 0)
+				 state->h++;
 			   }
 			   break;
 		case 0x24: // INR H
@@ -363,6 +390,7 @@ int Emulate8080p(State8080* state)
 				state->h = state->memory[address+1];
 				state->pc += 2;
 			   }
+			   break;
 		case 0x2b: // DCX H
 			   {
 			   state->h = state->h - 1;
@@ -397,12 +425,12 @@ int Emulate8080p(State8080* state)
 		case 0x2f: // CMA
 			   {
 			   state->a = ~state->a;
-		           }
+		       }
 			   break;	
 		case 0x30: break;
 		case 0x31: // LXI SP
 			   {
-			   state->sp = (opcode[2] << 8) | (opcode[1] & 0x08);
+			   state->sp = (opcode[2] << 8) | (opcode[1]);
 			   state->pc += 2;
 			   }
 			   break;
@@ -444,6 +472,11 @@ int Emulate8080p(State8080* state)
 			   uint16_t mem_set = (state->h << 8) | state->l;
 			   state->memory[mem_set] = opcode[1];
 			   state->pc += 1;
+			   }
+			   break;
+		case 0x37: // STC
+		       {
+				state->cc.cy = 1;
 			   }
 			   break;
 		case 0x38: break;
@@ -492,6 +525,11 @@ int Emulate8080p(State8080* state)
 			   {
 			   state->a = opcode[1];
 			   state->pc += 1;
+			   }
+			   break;
+		case 0x3f: // CMC
+		       {
+				state->cc.cy = 1 - state->cc.cy;
 			   }
 			   break;
 		case 0x40: // MOV B,B
@@ -1586,6 +1624,18 @@ int Emulate8080p(State8080* state)
 				state->pc += 2;
 			   }
 			   break;
+		case 0xe3: // XTHL
+			   {
+				uint8_t h = state->h;
+				uint8_t l = state->l;
+				uint8_t mem1 = state->memory[state->sp];
+				uint8_t mem2 = state->memory[state->sp+1];
+				state->h = mem2;
+				state->l = mem1;
+				state->memory[state->sp] = l;
+				state->memory[state->sp+1] = h;
+			   }
+			   break;
 		case 0xe4: // CPO
 			   {
 			   if (state->cc.p == 0)
@@ -1638,7 +1688,7 @@ int Emulate8080p(State8080* state)
 			   break;
 		case 0xe9: // PCHL
 			   {
-				state->pc = memoryFromHL(state);
+				state->pc = (state->h << 8) | state->l;
 			   }
 			   break;
 		case 0xea: // JPE
@@ -1780,6 +1830,12 @@ int Emulate8080p(State8080* state)
 			   		state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
 			   		state->sp += 2;
 			   	}
+			   }
+			   break;
+		case 0xf9: // SPHL
+			   {
+				uint16_t hl = (state->h << 8) | state->l;
+				state->sp = hl;
 			   }
 			   break;
 		case 0xfa: // JM
