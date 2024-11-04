@@ -3,6 +3,8 @@
 #include <SDL2/SDL_main.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_timer.h>
+#include <SDL2/SDL_video.h>
+#include <SDL2/SDL_render.h>
 #include "graphics.h"
 #include "memory.h"
 
@@ -15,7 +17,15 @@ void initialise_graphics(SpaceInvadersMachine* sim)
 {
     //SpaceInvadersMachine m_sim = sim;
     // Graphics
-    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+    sim_graphics = (SDL_Graphics *) calloc(1, sizeof(SDL_Graphics));
+    
+    // Attempt to initialize graphics and timer system.
+    if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER) != 0)
+    {
+        printf("error initializing SDL: %s\n", SDL_GetError());
+        exit(0);
+    }
+
     SDL_CreateWindowAndRenderer(224, 256, 0, &sim_graphics->window, &sim_graphics->renderer);
 
     //SetupAudio();

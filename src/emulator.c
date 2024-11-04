@@ -5,6 +5,28 @@
 #include "dissasembler.h"
 #include "emulator.h"
 
+//number of cycles for each instruction
+//+6 for conditional calls and rets when conditions are met
+const uint8_t op_cycles[] = {
+//  0   1   2   3   4   5   6   7   8   9   a   b   c   d   e   f
+	4,  10, 7,  5,  5,  5,  7,  4,  4,  10, 7,  5,  5,  5,  7,  4,  // 0
+	4,  10, 7,  5,  5,  5,  7,  4,  4,  10, 7,  5,  5,  5,  7,  4,  // 1
+	4,  10, 16, 5,  5,  5,  7,  4,  4,  10, 16, 5,  5,  5,  7,  4,  // 2
+	4,  10, 13, 5,  10, 10, 10, 4,  4,  10, 13, 5,  5,  5,  7,  4,  // 3
+	5,  5,  5,  5,  5,  5,  7,  5,  5,  5,  5,  5,  5,  5,  7,  5,  // 4
+	5,  5,  5,  5,  5,  5,  7,  5,  5,  5,  5,  5,  5,  5,  7,  5,  // 5
+	5,  5,  5,  5,  5,  5,  7,  5,  5,  5,  5,  5,  5,  5,  7,  5,  // 6
+	7,  7,  7,  7,  7,  7,  7,  7,  5,  5,  5,  5,  5,  5,  7,  5,  // 7
+	4,  4,  4,  4,  4,  4,  7,  4,  4,  4,  4,  4,  4,  4,  7,  4,  // 8
+	4,  4,  4,  4,  4,  4,  7,  4,  4,  4,  4,  4,  4,  4,  7,  4,  // 9
+	4,  4,  4,  4,  4,  4,  7,  4,  4,  4,  4,  4,  4,  4,  7,  4,  // a
+	4,  4,  4,  4,  4,  4,  7,  4,  4,  4,  4,  4,  4,  4,  7,  4,  // b
+	5,  10, 10, 10, 11, 11, 7,  11, 5,  10, 10, 10, 11, 11, 7,  11, // c
+	5,  10, 10, 10, 11, 11, 7,  11, 5,  10, 10, 10, 11, 11, 7,  11, // d
+	5,  10, 10, 18, 11, 11, 7,  11, 5,  5,  10, 5,  11, 11, 7,  11, // e
+	5,  10, 10, 4,  11, 11, 7,  11, 5,  5,  10, 4,  11, 11, 7,  11  // f
+};
+
 /* Condition codes:
  * z = Zero bit: is 1 if result equal to zero
  * s = Sign bit: is 1 if MSB of math instruction is set
@@ -69,6 +91,7 @@ uint8_t memoryFromHL(State8080 *state)
 int Emulate8080p(State8080* state)
 {
 	unsigned char *opcode = &state->memory[state->pc];
+	uint8_t cycles = op_cycles[*opcode];
 
 	/* Instruction descriptions:
 	 * NOP: Do Nothing
@@ -77,8 +100,8 @@ int Emulate8080p(State8080* state)
 	 */
 
 	#if PRINTOPS
-			printf("%04x\n", opcode);
-    		//Disassemble8080p(state->memory, state->pc);
+			printf("%04x\n", *opcode);
+    		Disassemble8080p(state->memory, state->pc);
 	#endif
 	uint16_t prev_pc = state->pc;
 	state->pc += 1;
@@ -132,6 +155,7 @@ int Emulate8080p(State8080* state)
 			   state->cc.cy = state->a & 1;
 			   }
 			   break;
+		case 0x08: break;
 		case 0x09: // DAD B
 			   {
 			   uint32_t s1 = state->h << 8 | state->l;
@@ -185,6 +209,7 @@ int Emulate8080p(State8080* state)
 			   state->a = (state->a >> 1) | (state->a & 1) << 7;
 			   }
 			   break;
+		case 0x10: break;
 		case 0x11: // LXI D
 			   {
 			   state->e = opcode[1];
@@ -224,6 +249,7 @@ int Emulate8080p(State8080* state)
 			   state->pc += 1;
 			   }
 			   break;
+		case 0x18: break;
 		case 0x19: // DAD D
 			   {
 			   uint32_t s1 = state->h << 8 | state->l;
@@ -271,6 +297,7 @@ int Emulate8080p(State8080* state)
 			   state->pc += 1;
 			   }
 			   break;
+		case 0x20: break;
 		case 0x21: // LXI H
 			   {
 			   state->l = opcode[1];
@@ -310,6 +337,7 @@ int Emulate8080p(State8080* state)
 			   state->pc += 1;
 			   }
 			   break;
+		case 0x28: break;
 		case 0x29: // DAD H
 			   {
 			   uint32_t s1 = state->h << 8 | state->l;
@@ -356,6 +384,7 @@ int Emulate8080p(State8080* state)
 			   state->a = ~state->a;
 		           }
 			   break;	
+		case 0x30: break;
 		case 0x31: // LXI SP
 			   {
 			   state->sp = (opcode[2] << 8) | (opcode[1] & 0x08);
@@ -402,6 +431,7 @@ int Emulate8080p(State8080* state)
 			   state->pc += 1;
 			   }
 			   break;
+		case 0x38: break;
 		case 0x39: // DAD SP
 			   {
 			   uint32_t s1 = state->h << 8 | state->l;
@@ -1232,6 +1262,7 @@ int Emulate8080p(State8080* state)
 		case 0xc0: // RNZ
 			   {
 			   if (state->cc.z == 0)
+			    cycles = cycles+6;
 			   	state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
 			   	state->sp += 2;
 			   }
@@ -1260,6 +1291,7 @@ int Emulate8080p(State8080* state)
 			   {
 			   if (state->cc.z == 1)
 			   {
+						cycles = cycles+6;
             		   	uint16_t ret = state->pc+2;    
             		   	state->memory[state->sp-1] = (ret >> 8) & 0xff;    
             		   	state->memory[state->sp-2] = (ret & 0xff);    
@@ -1300,6 +1332,7 @@ int Emulate8080p(State8080* state)
 		case 0xc8: // RZ
 			   {
 			   if (state->cc.z == 1)
+			    cycles = cycles+6;
 			   	state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
 			   	state->sp += 2;
 			   }
@@ -1320,6 +1353,7 @@ int Emulate8080p(State8080* state)
 			   {
 			   if (state->cc.z == 0)
 			   {
+						cycles = cycles + 6;
             		   	uint16_t ret = state->pc+2;    
             		   	state->memory[state->sp-1] = (ret >> 8) & 0xff;    
             		   	state->memory[state->sp-2] = (ret & 0xff);    
@@ -1362,6 +1396,7 @@ int Emulate8080p(State8080* state)
 		case 0xd0: // RNC
 			   {
 			   if (state->cc.cy == 0)
+			   	cycles = cycles+6;
 			   	state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
 			   	state->sp += 2;
 			   }
@@ -1388,6 +1423,7 @@ int Emulate8080p(State8080* state)
 			   {
 			   if (state->cc.cy == 0)
 			   {
+						cycles = cycles+6;
             		   	uint16_t ret = state->pc+2;    
             		   	state->memory[state->sp-1] = (ret >> 8) & 0xff;    
             		   	state->memory[state->sp-2] = (ret & 0xff);    
@@ -1428,6 +1464,7 @@ int Emulate8080p(State8080* state)
 		case 0xd8: // RC
 			   {
 			   if (state->cc.cy == 1)
+			    cycles = cycles+6;
 			   	state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
 			   	state->sp += 2;
 			   }
@@ -1447,6 +1484,7 @@ int Emulate8080p(State8080* state)
 			   {
 			   if (state->cc.cy == 1)
 			   {
+						cycles = cycles + 6;
             		   	uint16_t ret = state->pc+2;    
             		   	state->memory[state->sp-1] = (ret >> 8) & 0xff;    
             		   	state->memory[state->sp-2] = (ret & 0xff);    
@@ -1480,6 +1518,7 @@ int Emulate8080p(State8080* state)
 		case 0xe0: // RPO
 			   {
 			   if (state->cc.p == 0)
+			    cycles = cycles+6;
 			   	state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
 			   	state->sp += 2;
 			   }
@@ -1503,6 +1542,7 @@ int Emulate8080p(State8080* state)
 			   {
 			   if (state->cc.p == 0)
 			   {
+						cycles = cycles+6;
             		   	uint16_t ret = state->pc+2;    
             		   	state->memory[state->sp-1] = (ret >> 8) & 0xff;    
             		   	state->memory[state->sp-2] = (ret & 0xff);    
@@ -1541,6 +1581,7 @@ int Emulate8080p(State8080* state)
 		case 0xe8: // RPE
 			   {
 			   if (state->cc.p == 1)
+			    cycles = cycles+6;
 			   	state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
 			   	state->sp += 2;
 			   }
@@ -1572,6 +1613,7 @@ int Emulate8080p(State8080* state)
 			   {
 			   if (state->cc.p == 1)
 			   {
+						cycles = cycles+6;
             		   	uint16_t ret = state->pc+2;    
             		   	state->memory[state->sp-1] = (ret >> 8) & 0xff;    
             		   	state->memory[state->sp-2] = (ret & 0xff);    
@@ -1603,6 +1645,7 @@ int Emulate8080p(State8080* state)
 		case 0xf0: // RP
 			   {
 			   if (state->cc.s == 0)
+			    cycles = cycles+6;
 			   	state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
 			   	state->sp += 2;
 			   }
@@ -1636,6 +1679,7 @@ int Emulate8080p(State8080* state)
 			   {
 			   if (state->cc.s == 0)
 			   {
+						cycles = cycles+6;
             		   	uint16_t ret = state->pc+2;    
             		   	state->memory[state->sp-1] = (ret >> 8) & 0xff;    
             		   	state->memory[state->sp-2] = (ret & 0xff);    
@@ -1679,6 +1723,7 @@ int Emulate8080p(State8080* state)
 		case 0xf8: // RM
 			   {
 			   if (state->cc.s == 1)
+			    cycles = cycles+6;
 			   	state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
 			   	state->sp += 2;
 			   }
@@ -1700,6 +1745,7 @@ int Emulate8080p(State8080* state)
 			   {
 			   if (state->cc.s == 1)
 			   {
+						cycles = cycles+6;
             		   	uint16_t ret = state->pc+2;    
             		   	state->memory[state->sp-1] = (ret >> 8) & 0xff;    
             		   	state->memory[state->sp-2] = (ret & 0xff);    
@@ -1738,10 +1784,10 @@ int Emulate8080p(State8080* state)
 		printf("%c", state->cc.p ? 'p' : '.');
 		printf("%c", state->cc.cy ? 'c' : '.');
 		printf("%c  ", state->cc.ac ? 'a' : '.');
-		printf("A $%02x B $%02x C $%02x D $%02x E $%02x H $%02x L $%02x SP %04x, INC %04x\n", state->a, state->b, state->c,
-           	state->d, state->e, state->h, state->l, state->sp, state->pc - prev_pc);
+		printf("A $%02x B $%02x C $%02x D $%02x E $%02x H $%02x L $%02x SP %04x, INC %04x CYCLES %04x\n", state->a, state->b, state->c,
+           	state->d, state->e, state->h, state->l, state->sp, state->pc - prev_pc, cycles);
 	#endif
-	return 1;
+	return cycles;
 }
 
 void ReadFileIntoMemoryAt(State8080* state, char* filename, uint32_t offset)
