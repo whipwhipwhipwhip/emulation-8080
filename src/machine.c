@@ -19,6 +19,7 @@ SDL_Window *win;
 SDL_Surface *winsurf;
 SpaceInvadersMachine *sim;
 SDL_Event event;
+State8080 *state;
 
 uint8_t InPort(uint8_t port_bit)
 {
@@ -142,7 +143,8 @@ void readFile(char* filename, uint32_t offset)
 	int fsize = ftell(f);
 	fseek(f, 0L, SEEK_SET);
 	
-	uint8_t *buffer = &sim->state->memory[offset];
+	//uint8_t *buffer = &sim->state->memory[offset];
+    uint8_t *buffer = &state->memory[offset];
 	fread(buffer, fsize, 1, f);
 	fclose(f);
 }
@@ -182,23 +184,56 @@ void doEmulation()
     }
 }
 
+void doCPUTest()
+{
+     //Fix the first instruction to be JMP 0x100    
+    state->memory[0]=0xc3;    
+    state->memory[1]=0;    
+    state->memory[2]=0x01;    
+
+    //Fix the stack pointer from 0x6ad to 0x7ad    
+    // this 0x06 byte 112 in the code, which is    
+    // byte 112 + 0x100 = 368 in memory    
+    state->memory[368] = 0x7;    
+
+    //Skip DAA test    
+    state->memory[0x59c] = 0xc3; //JMP    
+    state->memory[0x59d] = 0xc2;    
+    state->memory[0x59e] = 0x05;    
+
+    int cycleBlock = 100;
+    int iter = 0;
+
+    while (iter < 10000)
+    {
+        int cycles = 0;
+        while (cycles < cycleBlock)
+        {
+            cycles += Emulate8080p(state);
+        }
+        //getchar();
+        iter++;
+    }
+}
+
 
 int main(int argc, char * argv[])
 {
     // Make emulator file, load into RAM
-    State8080 *testState;
-    sim = (SpaceInvadersMachine *) calloc(1, sizeof(SpaceInvadersMachine));
-    sim->state = (State8080*) calloc(1, sizeof(State8080));
-    sim->state->memory = malloc(16 * 0x1000);
+    //sim = (SpaceInvadersMachine *) calloc(1, sizeof(SpaceInvadersMachine));
+    //sim->state = (State8080*) calloc(1, sizeof(State8080));
+    //sim->state->memory = malloc(16 * 0x1000);
+    state = (State8080*) calloc(1, sizeof(State8080));
+    state->memory = malloc(16 * 0x1000);
 
     //init_display();
-    initialise_graphics(sim);
+    //initialise_graphics(sim);
 
-    readFile(argv[1], 0);
-    readFile(argv[2], 0x800);
-    readFile(argv[3], 0x1000);
-    readFile(argv[4], 0x1800);
-
-    doEmulation();
+    readFile(argv[1], 0x100);
+    //readFile(argv[2], 0x800);
+    //readFile(argv[3], 0x1000);
+    //readFile(argv[4], 0x1800);
+    printf("test\n");
+    doCPUTest();
 
 }

@@ -76,7 +76,7 @@ void logicFlags(State8080 *state)
 {
 	state->cc.cy = 0;
 	state->cc.z = state->a == 0;
-	state->cc.s = (state->a&0x80) > 0;
+	state->cc.s = (state->a&0x80) == 0x80;
 	state->cc.p = parity(state->a, 8);
 }
 
@@ -87,6 +87,7 @@ uint8_t memoryFromHL(State8080 *state)
 }
 
 # define PRINTOPS 1
+# define FOR_CPUDIAG true
 
 int Emulate8080p(State8080* state)
 {
@@ -305,6 +306,13 @@ int Emulate8080p(State8080* state)
 			   state->pc += 2;
 			   }
 			   break;
+		case 0x22: //SHLD adr
+			   {
+				uint16_t address = (opcode[2] << 8) | opcode[1];
+				state->memory[address] = state->l;
+				state->memory[address+1] = state->h;
+				state->pc += 2;
+			   }
 		case 0x23: // INX H
 			   {
 			   state->l++;
@@ -348,6 +356,13 @@ int Emulate8080p(State8080* state)
 			   state->l = (answer & 0xff);
 			   }
 			   break;
+		case 0x2a: //LHLD adr
+			   {
+				uint16_t address = (opcode[2] << 8) | opcode[1];
+				state->l = state->memory[address];
+				state->h = state->memory[address+1];
+				state->pc += 2;
+			   }
 		case 0x2b: // DCX H
 			   {
 			   state->h = state->h - 1;
@@ -409,8 +424,8 @@ int Emulate8080p(State8080* state)
 			   uint8_t pv_cy = state->cc.cy;
 			   arithmeticFlags(state, answer, 0x01);
 			   state->cc.cy = pv_cy;
-			   state->h = (answer & 0xff00) >> 8;
-			   state->l = answer & 0xff;
+			   //state->h = (answer & 0xff00) >> 8;
+			   //state->l = answer & 0xff;
 			   }
 			   break;
 		case 0x35: // DCR M
@@ -420,8 +435,8 @@ int Emulate8080p(State8080* state)
 			   uint8_t pv_cy = state->cc.cy;
 			   arithmeticFlags(state, answer, s2);
 			   state->cc.cy = pv_cy;
-			   state->h = (answer & 0xff00) >> 8;
-			   state->l = answer & 0xff;
+			   //state->h = (answer & 0xff00) >> 8;
+			   //state->l = answer & 0xff;
 			   }
 			   break;
 		case 0x36: // MVI M
@@ -1262,9 +1277,11 @@ int Emulate8080p(State8080* state)
 		case 0xc0: // RNZ
 			   {
 			   if (state->cc.z == 0)
-			    cycles = cycles+6;
-			   	state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
-			   	state->sp += 2;
+			   	{
+			    	cycles = cycles+6;
+			   		state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
+			   		state->sp += 2;
+			   	}
 			   }
 			   break;
 		case 0xc1: //POP B
@@ -1289,7 +1306,7 @@ int Emulate8080p(State8080* state)
 			   break;
 		case 0xc4: // CNZ
 			   {
-			   if (state->cc.z == 1)
+			   if (state->cc.z == 0)
 			   {
 						cycles = cycles+6;
             		   	uint16_t ret = state->pc+2;    
@@ -1332,9 +1349,11 @@ int Emulate8080p(State8080* state)
 		case 0xc8: // RZ
 			   {
 			   if (state->cc.z == 1)
-			    cycles = cycles+6;
-			   	state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
-			   	state->sp += 2;
+			   	{
+			    	cycles = cycles+6;
+			   		state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
+			   		state->sp += 2;
+			   	}
 			   }
 			   break;
 		case 0xc9: // RET
@@ -1351,7 +1370,7 @@ int Emulate8080p(State8080* state)
 			   break;
 		case 0xcc: // CZ
 			   {
-			   if (state->cc.z == 0)
+			   if (state->cc.z == 1)
 			   {
 						cycles = cycles + 6;
             		   	uint16_t ret = state->pc+2;    
@@ -1367,6 +1386,29 @@ int Emulate8080p(State8080* state)
             		   }   
 			   break;
 		case 0xcd: // CALL
+			#ifdef FOR_CPUDIAG    
+            if (5 ==  ((opcode[2] << 8) | opcode[1]))    
+            {    
+                if (state->c == 9)    
+                {    
+                    uint16_t offset = (state->d<<8) | (state->e);    
+                    char *str = &state->memory[offset+3];  //skip the prefix bytes    
+                    while (*str != '$')    
+                        printf("%c", *str++);    
+                    printf("\n");    
+                }    
+                else if (state->c == 2)    
+                {    
+                    //saw this in the inspected code, never saw it called    
+                    printf ("print char routine called\n");    
+                }    
+            }    
+            else if (0 ==  ((opcode[2] << 8) | opcode[1]))    
+            {    
+                exit(0);    
+            }    
+            else    
+   			#endif
 			   {    
             		   uint16_t ret = state->pc+2;    
             		   state->memory[state->sp-1] = (ret >> 8) & 0xff;    
@@ -1396,9 +1438,11 @@ int Emulate8080p(State8080* state)
 		case 0xd0: // RNC
 			   {
 			   if (state->cc.cy == 0)
-			   	cycles = cycles+6;
-			   	state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
-			   	state->sp += 2;
+			   	{
+			    	cycles = cycles+6;
+			   		state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
+			   		state->sp += 2;
+			   	}
 			   }
 			   break;
 		case 0xd1: //POP D
@@ -1464,9 +1508,11 @@ int Emulate8080p(State8080* state)
 		case 0xd8: // RC
 			   {
 			   if (state->cc.cy == 1)
-			    cycles = cycles+6;
-			   	state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
-			   	state->sp += 2;
+			   	{
+			    	cycles = cycles+6;
+			   		state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
+			   		state->sp += 2;
+			   	}
 			   }
 			   break;
 		case 0xda: // JC
@@ -1518,9 +1564,11 @@ int Emulate8080p(State8080* state)
 		case 0xe0: // RPO
 			   {
 			   if (state->cc.p == 0)
-			    cycles = cycles+6;
-			   	state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
-			   	state->sp += 2;
+			   	{
+			    	cycles = cycles+6;
+			   		state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
+			   		state->sp += 2;
+			   	}
 			   }
 			   break;
 		case 0xe1: // POP H
@@ -1532,7 +1580,7 @@ int Emulate8080p(State8080* state)
 			   break;
 		case 0xe2: // JPO
 			   {
-			   if (state->cc.p == 1)
+			   if (state->cc.p == 0)
 				state->pc = opcode[2] << 8 | opcode[1];
 			   else
 				state->pc += 2;
@@ -1565,8 +1613,8 @@ int Emulate8080p(State8080* state)
 		case 0xe6: // ANI
 			   {
 				state->a = state->a & opcode[1];
-				state->pc++;
 				logicFlags(state);
+				state->pc++;
 			   }
 			   break;
 		case 0xe7: // RST 4
@@ -1581,9 +1629,11 @@ int Emulate8080p(State8080* state)
 		case 0xe8: // RPE
 			   {
 			   if (state->cc.p == 1)
-			    cycles = cycles+6;
-			   	state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
-			   	state->sp += 2;
+			   	{
+			    	cycles = cycles+6;
+			   		state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
+			   		state->sp += 2;
+			   	}
 			   }
 			   break;
 		case 0xe9: // PCHL
@@ -1645,9 +1695,11 @@ int Emulate8080p(State8080* state)
 		case 0xf0: // RP
 			   {
 			   if (state->cc.s == 0)
-			    cycles = cycles+6;
-			   	state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
-			   	state->sp += 2;
+			   	{
+			    	cycles = cycles+6;
+			   		state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
+			   		state->sp += 2;
+			   	}
 			   }
 			   break;
 		case 0xf1: //POP PSW
@@ -1723,9 +1775,11 @@ int Emulate8080p(State8080* state)
 		case 0xf8: // RM
 			   {
 			   if (state->cc.s == 1)
-			    cycles = cycles+6;
-			   	state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
-			   	state->sp += 2;
+			   	{
+			    	cycles = cycles+6;
+			   		state->pc = state->memory[state->sp] | state->memory[state->sp+1] << 8;
+			   		state->sp += 2;
+			   	}
 			   }
 			   break;
 		case 0xfa: // JM
