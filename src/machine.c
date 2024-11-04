@@ -18,6 +18,7 @@ int resizef;
 SDL_Window *win;
 SDL_Surface *winsurf;
 SpaceInvadersMachine *sim;
+SDL_Event event;
 
 uint8_t InPort(uint8_t port_bit)
 {
@@ -156,6 +157,13 @@ void doEmulation()
     sim->lastTimer = lastTime;
     sim->whichInterrupt = 0;
 
+    while(SDL_PollEvent(&event) != 0) {
+		if(event.type == SDL_QUIT) {
+			quit = 1;
+			return;
+		}
+	}	
+
     while (quit == 0)
     {
         for(int i = 0; i < 2; i ++)
@@ -167,7 +175,6 @@ void doEmulation()
                 cycles += Emulate8080p(sim->state);
             }
             generate_interrupt(sim->state, sim->whichInterrupt);
-            // seg fault in DrawGraphics
             DrawGraphics(sim);
             getchar();
         }
@@ -184,7 +191,8 @@ int main(int argc, char * argv[])
     sim->state = (State8080*) calloc(1, sizeof(State8080));
     sim->state->memory = malloc(16 * 0x1000);
 
-    init_display();
+    //init_display();
+    initialise_graphics(sim);
 
     readFile(argv[1], 0);
     readFile(argv[2], 0x800);

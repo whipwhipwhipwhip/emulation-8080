@@ -7,12 +7,12 @@
 
 typedef struct SpaceInvadersMachine;
 typedef struct SDL_Graphics {
-	// Colon means use only that number of bits
-	// uint8_t unsigned 8 bit integer
 	SDL_Window * window;
     SDL_Renderer * renderer;
 } SDL_Graphics;
 
+
+void initialise_graphics(SpaceInvadersMachine* sim);
 void DrawGraphics(SpaceInvadersMachine* sim);
 
 #endif
