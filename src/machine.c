@@ -143,8 +143,7 @@ void readFile(char* filename, uint32_t offset)
 	int fsize = ftell(f);
 	fseek(f, 0L, SEEK_SET);
 	
-	//uint8_t *buffer = &sim->state->memory[offset];
-    uint8_t *buffer = &state->memory[offset];
+	uint8_t *buffer = &sim->state->memory[offset];
 	fread(buffer, fsize, 1, f);
 	fclose(f);
 }
@@ -178,7 +177,6 @@ void doEmulation()
             }
             generate_interrupt(sim->state, sim->whichInterrupt);
             DrawGraphics(sim);
-            getchar();
         }
 
     }
@@ -220,20 +218,17 @@ void doCPUTest()
 int main(int argc, char * argv[])
 {
     // Make emulator file, load into RAM
-    //sim = (SpaceInvadersMachine *) calloc(1, sizeof(SpaceInvadersMachine));
-    //sim->state = (State8080*) calloc(1, sizeof(State8080));
-    //sim->state->memory = malloc(16 * 0x1000);
-    state = (State8080*) calloc(1, sizeof(State8080));
-    state->memory = malloc(16 * 0x1000);
+    sim = (SpaceInvadersMachine *) calloc(1, sizeof(SpaceInvadersMachine));
+    sim->state = (State8080*) calloc(1, sizeof(State8080));
+    sim->state->memory = malloc(16 * 0x1000);
 
-    //init_display();
-    //initialise_graphics(sim);
-
+    initialise_graphics(sim);
+    printf("graphics\n");
     readFile(argv[1], 0x100);
-    //readFile(argv[2], 0x800);
-    //readFile(argv[3], 0x1000);
-    //readFile(argv[4], 0x1800);
-    printf("test\n");
-    doCPUTest();
+    readFile(argv[2], 0x800);
+    readFile(argv[3], 0x1000);
+    readFile(argv[4], 0x1800);
+
+    doEmulation();
 
 }
