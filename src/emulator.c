@@ -808,6 +808,12 @@ int Emulate8080p(State8080* state)
 			   state->memory[memloc] = state->l;
 			   }
 			   break;
+		case 0x76: // HLT
+			   {
+				printf("HLT Called, exiting...\n");
+				exit(0);
+			   }
+			   break;
 		case 0x77: // MOV M,A
 			   {
 			   uint16_t memloc = (state->h << 8) | state->l;
