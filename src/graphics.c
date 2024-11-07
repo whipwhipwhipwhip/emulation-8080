@@ -31,6 +31,41 @@ void initialise_graphics(SpaceInvadersMachine* sim)
     //SetupAudio();
 }
 
+/*
+void init_display() {
+    // Init SDL
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER)) {
+        printf("%s\n", SDL_GetError());
+        exit(1);
+    }
+
+    // Create a window
+    win = SDL_CreateWindow(
+            TITLE,
+            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+            2*WIDTH, 2*HEIGHT,
+            SDL_WINDOW_RESIZABLE
+            );
+    if (!win) {
+        puts("Failed to create window");
+        exit(1);
+    }
+
+    // Get surface
+    winsurf = SDL_GetWindowSurface(win);
+    if (!winsurf) {
+        puts("Failed to get surface");
+        exit(1);
+    }
+
+    // Handle resize events
+    //SDL_AddEventWatch(HandleResize, NULL);
+
+    // Create backbuffer surface
+    surf = SDL_CreateRGBSurface(0, WIDTH, HEIGHT, 32, 0, 0, 0, 0);
+}
+*/
+
 SDL_Color calculateOverlay(uint8_t hor, uint8_t ver)
 {
     // Default Space invaders game overlay

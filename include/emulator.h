@@ -1,6 +1,7 @@
 #ifndef EMULATOR_H
 #define EMULATOR_H
 #include<stdint.h>
+#include "memory.h"
 
 typedef struct ConditionCodes {
 	// Colon means use only that number of bits
@@ -22,6 +23,7 @@ typedef struct State8080 {
 	uint8_t		h;
 	uint8_t		l;
 	uint16_t	sp;
+	uint16_t    lastSp;
 	uint16_t	pc;
 	uint8_t		*memory;
 	struct		ConditionCodes cc;
@@ -29,5 +31,7 @@ typedef struct State8080 {
 } State8080;
 
 int Emulate8080p(State8080* state);
+void writeMemoryAt(State8080* state, uint16_t address, uint8_t value);
+uint16_t readMemoryAt(State8080* state, uint16_t byte);
 
 #endif
