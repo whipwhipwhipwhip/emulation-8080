@@ -3,7 +3,7 @@
 #include<stdint.h>
 #include "emulator.h"
 
-uint16_t readMemoryAt(State8080* state, uint16_t byte);
+//uint16_t readMemoryAt(State8080* state, uint16_t byte);
 
 
 #endif

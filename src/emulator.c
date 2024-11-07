@@ -21,7 +21,7 @@ const uint8_t op_cycles[] = {
 	4,  4,  4,  4,  4,  4,  7,  4,  4,  4,  4,  4,  4,  4,  7,  4,  // 9
 	4,  4,  4,  4,  4,  4,  7,  4,  4,  4,  4,  4,  4,  4,  7,  4,  // a
 	4,  4,  4,  4,  4,  4,  7,  4,  4,  4,  4,  4,  4,  4,  7,  4,  // b
-	5,  10, 10, 10, 11, 11, 7,  11, 5,  10, 10, 10, 11, 11, 7,  11, // c
+	5,  10, 10, 10, 11, 11, 7,  11, 5,  10, 10, 10, 11, 17, 7,  11, // c
 	5,  10, 10, 10, 11, 11, 7,  11, 5,  10, 10, 10, 11, 11, 7,  11, // d
 	5,  10, 10, 18, 11, 11, 7,  11, 5,  5,  10, 5,  11, 11, 7,  11, // e
 	5,  10, 10, 4,  11, 11, 7,  11, 5,  5,  10, 4,  11, 11, 7,  11  // f
@@ -83,11 +83,11 @@ void logicFlags(State8080 *state)
 uint8_t memoryFromHL(State8080 *state)
 {
 	uint16_t answer = (state->h << 8) | state->l;
-	return state->memory[answer];
+	return readMemoryAt(state, answer);
 }
 
-# define PRINTOPS 1
-# define FOR_CPUDIAG true
+# define PRINTOPS 0
+# define FOR_CPUDIAG false
 
 int Emulate8080p(State8080* state)
 {
@@ -121,7 +121,8 @@ int Emulate8080p(State8080* state)
 		case 0x02: // STAX B
 			   {
 			   uint16_t memLoc = (state->b << 8) | state->c;
-			   state->memory[memLoc] = state->a;
+			   writeMemoryAt(state, memLoc, state->a);
+			   //state->memory[memLoc] = state->a;
 			   }
 			   break;
 		case 0x03: // INX B
@@ -165,8 +166,8 @@ int Emulate8080p(State8080* state)
 		case 0x08: break;
 		case 0x09: // DAD B
 			   {
-			   uint32_t s1 = state->h << 8 | state->l;
-			   uint32_t s2 = state->b << 8 | state->c;
+			   uint32_t s1 = (state->h << 8) | state->l;
+			   uint32_t s2 = (state->b << 8) | state->c;
 			   uint32_t answer = s1 + s2;
 			   state->cc.cy = answer > 0xffff;
 			   state->h = (answer & 0xff00) >> 8;
@@ -176,7 +177,8 @@ int Emulate8080p(State8080* state)
 		case 0x0a: // LDAX B
 			   {
 			   uint16_t offset = state->b << 8 | state->c;
-			   state->a = state->memory[offset];
+			   state->a = readMemoryAt(state, offset);
+			   //state->a = state->memory[offset];
 			   }
 			   break;
 		case 0x0b: // DCX B
@@ -227,7 +229,8 @@ int Emulate8080p(State8080* state)
 		case 0x12: // STAX D
 			   {
 			   uint16_t memLoc = (state->d << 8) | state->e;
-			   state->memory[memLoc] = state->a;
+			   writeMemoryAt(state, memLoc, state->a);
+			   //state->memory[memLoc] = state->a;
 			   }
 			   break;
 		case 0x13: // INX D
@@ -283,7 +286,8 @@ int Emulate8080p(State8080* state)
 		case 0x1a: // LDAX D
 			   {
 			   uint16_t offset = state->d << 8 | state->e;
-			   state->a = state->memory[offset];
+			   state->a = readMemoryAt(state, offset);
+			   //state->a = state->memory[offset];
 			   }
 			   break;
 		case 0x1b: // DCX D
@@ -386,8 +390,10 @@ int Emulate8080p(State8080* state)
 		case 0x2a: //LHLD adr
 			   {
 				uint16_t address = (opcode[2] << 8) | opcode[1];
-				state->l = state->memory[address];
-				state->h = state->memory[address+1];
+				state->l = readMemoryAt(state, address);
+				state->h = readMemoryAt(state, address+1);
+				//state->l = state->memory[address];
+				//state->h = state->memory[address+1];
 				state->pc += 2;
 			   }
 			   break;
@@ -437,7 +443,8 @@ int Emulate8080p(State8080* state)
 		case 0x32: // STA
 			   {
 			   uint16_t memloc = (opcode[2] << 8) | (opcode[1]);
-			   state->memory[memloc] = state->a;
+			   writeMemoryAt(state, memloc, state->a);
+			   //state->memory[memloc] = state->a;
 			   state->pc += 2;
 			   }
 			   break;
@@ -454,23 +461,34 @@ int Emulate8080p(State8080* state)
 			   state->cc.cy = pv_cy;
 			   //state->h = (answer & 0xff00) >> 8;
 			   //state->l = answer & 0xff;
+			   uint16_t mem_set = (state->h << 8) | state->l;
+			   writeMemoryAt(state, mem_set, answer);
 			   }
 			   break;
 		case 0x35: // DCR M
 			   {
 			   uint16_t s2 = ~(0x01) + 1;
+			   uint16_t prior_delay = memoryFromHL(state);
 			   uint16_t answer = memoryFromHL(state) + s2;
 			   uint8_t pv_cy = state->cc.cy;
 			   arithmeticFlags(state, answer, s2);
 			   state->cc.cy = pv_cy;
 			   //state->h = (answer & 0xff00) >> 8;
 			   //state->l = answer & 0xff;
+			   if(state->pc == 0x1d)
+			   {
+				printf("Prior isrDelay value is %x\n", prior_delay);
+				printf("Current isrDelay value is %x\n", answer);
+			   }
+			   uint16_t mem_set = (state->h << 8) | state->l;
+			   writeMemoryAt(state, mem_set, answer);
 			   }
 			   break;
 		case 0x36: // MVI M
 			   {
 			   uint16_t mem_set = (state->h << 8) | state->l;
-			   state->memory[mem_set] = opcode[1];
+			   writeMemoryAt(state, mem_set, opcode[1]);
+			   //state->memory[mem_set] = opcode[1];
 			   state->pc += 1;
 			   }
 			   break;
@@ -493,7 +511,8 @@ int Emulate8080p(State8080* state)
 		case 0x3a: // LDA
 			   {
 			   uint16_t memloc = (opcode[2] << 8) | (opcode[1]);
-			   state->a = state->memory[memloc];
+			   state->a = readMemoryAt(state, memloc);
+			   //state->a = state->memory[memloc];
 			   state->pc += 2;
 			   }
 			   break;
@@ -775,37 +794,43 @@ int Emulate8080p(State8080* state)
 		case 0x70: // MOV M,B
 			   {
 			   uint16_t memloc = (state->h << 8) | state->l;
-			   state->memory[memloc] = state->b;
+			   writeMemoryAt(state, memloc, state->b);
+			   //state->memory[memloc] = state->b;
 			   }
 			   break;
 		case 0x71: // MOV M,C
 			   {
 			   uint16_t memloc = (state->h << 8) | state->l;
-			   state->memory[memloc] = state->c;
+			   writeMemoryAt(state, memloc, state->c);
+			   //state->memory[memloc] = state->c;
 			   }
 			   break;
 		case 0x72: // MOV M,D
 			   {
 			   uint16_t memloc = (state->h << 8) | state->l;
-			   state->memory[memloc] = state->d;
+			   writeMemoryAt(state, memloc, state->d);
+			   //state->memory[memloc] = state->d;
 			   }
 			   break;
 		case 0x73: // MOV M,E
 			   {
 			   uint16_t memloc = (state->h << 8) | state->l;
-			   state->memory[memloc] = state->e;
+			   writeMemoryAt(state, memloc, state->e);
+			   //state->memory[memloc] = state->e;
 			   }
 			   break;
 		case 0x74: // MOV M,H
 			   {
 			   uint16_t memloc = (state->h << 8) | state->l;
-			   state->memory[memloc] = state->h;
+			   writeMemoryAt(state, memloc, state->h);
+			   //state->memory[memloc] = state->h;
 			   }
 			   break;
 		case 0x75: // MOV M,L
 			   {
 			   uint16_t memloc = (state->h << 8) | state->l;
-			   state->memory[memloc] = state->l;
+			   writeMemoryAt(state, memloc, state->l);
+			   //state->memory[memloc] = state->l;
 			   }
 			   break;
 		case 0x76: // HLT
@@ -817,7 +842,8 @@ int Emulate8080p(State8080* state)
 		case 0x77: // MOV M,A
 			   {
 			   uint16_t memloc = (state->h << 8) | state->l;
-			   state->memory[memloc] = state->a;
+			   writeMemoryAt(state, memloc, state->a);
+			   //state->memory[memloc] = state->a;
 			   }
 			   break;
 		case 0x78: // MOV A,B
@@ -1361,9 +1387,9 @@ int Emulate8080p(State8080* state)
 			   }
 			   else
 		           {
-				state->pc += 2;
-			   }
-            		   }   
+					state->pc += 2;
+			  	   }
+            	}   
 			   break;
 		case 0xc5: // PUSH B
 			   {
@@ -1384,8 +1410,10 @@ int Emulate8080p(State8080* state)
 		case 0xc7: // RST 0
 			   {
 			   uint16_t push = state->pc+2;
-			   state->memory[state->sp-1] = push >> 8 & 0xff;
-			   state->memory[state->sp-2] = push & 0xff;
+			   writeMemoryAt(state, state->sp-1, (push >> 8) & 0xff);
+			   writeMemoryAt(state, state->sp-1, push & 0xff);
+			   //state->memory[state->sp-1] = push >> 8 & 0xff;
+			   //state->memory[state->sp-2] = push & 0xff;
 			   state->sp -= 2;
 			   state->pc = 0x0000;
 			   }
@@ -1473,7 +1501,7 @@ int Emulate8080p(State8080* state)
 		case 0xcf: // RST 1
 			   {
 			   uint16_t push = state->pc+2;
-			   state->memory[state->sp-1] = push >> 8 & 0xff;
+			   state->memory[state->sp-1] = (push >> 8) & 0xff;
 			   state->memory[state->sp-2] = push & 0xff;
 			   state->sp -= 2;
 			   state->pc = 0x0008;
@@ -1543,7 +1571,7 @@ int Emulate8080p(State8080* state)
 		case 0xd7: // RST 2
 			   {
 			   uint16_t push = state->pc+2;
-			   state->memory[state->sp-1] = push >> 8 & 0xff;
+			   state->memory[state->sp-1] = (push >> 8) & 0xff;
 			   state->memory[state->sp-2] = push & 0xff;
 			   state->sp -= 2;
 			   state->pc = 0x0010;
@@ -1599,7 +1627,7 @@ int Emulate8080p(State8080* state)
 		case 0xdf: // RST 3
 			   {
 			   uint16_t push = state->pc+2;
-			   state->memory[state->sp-1] = push >> 8 & 0xff;
+			   state->memory[state->sp-1] = (push >> 8) & 0xff;
 			   state->memory[state->sp-2] = push & 0xff;
 			   state->sp -= 2;
 			   state->pc = 0x0018;
@@ -1676,7 +1704,7 @@ int Emulate8080p(State8080* state)
 		case 0xe7: // RST 4
 			   {
 			   uint16_t push = state->pc+2;
-			   state->memory[state->sp-1] = push >> 8 & 0xff;
+			   state->memory[state->sp-1] = (push >> 8) & 0xff;
 			   state->memory[state->sp-2] = push & 0xff;
 			   state->sp -= 2;
 			   state->pc = 0x0020;
@@ -1742,7 +1770,7 @@ int Emulate8080p(State8080* state)
 		case 0xef: // RST 5
 			   {
 			   uint16_t push = state->pc+2;
-			   state->memory[state->sp-1] = push >> 8 & 0xff;
+			   state->memory[state->sp-1] = (push >> 8) & 0xff;
 			   state->memory[state->sp-2] = push & 0xff;
 			   state->sp -= 2;
 			   state->pc = 0x0028;
@@ -1803,10 +1831,10 @@ int Emulate8080p(State8080* state)
 		case 0xf5: // PUSH PSW
 			   {
 				state->memory[state->sp-1] = state->a;    
-            			uint8_t psw = (state->cc.z |    
-                            			state->cc.s << 1 |    
-                            			state->cc.p << 2 |    
-                            			state->cc.cy << 3 |    
+            	uint8_t psw = (state->cc.z |    
+                            	state->cc.s << 1 |    
+                            	state->cc.p << 2 |    
+                            	state->cc.cy << 3 |    
                             	state->cc.ac << 4 ); 
 				state->memory[state->sp-2] = psw;
 				state->sp -= 2;
@@ -1822,7 +1850,7 @@ int Emulate8080p(State8080* state)
 		case 0xf7: // RST 6
 			   {
 			   uint16_t push = state->pc+2;
-			   state->memory[state->sp-1] = push >> 8 & 0xff;
+			   state->memory[state->sp-1] = (push >> 8) & 0xff;
 			   state->memory[state->sp-2] = push & 0xff;
 			   state->sp -= 2;
 			   state->pc = 0x0030;
@@ -1885,7 +1913,7 @@ int Emulate8080p(State8080* state)
 		case 0xff: // RST 7
 			   {
 			   uint16_t push = state->pc+2;
-			   state->memory[state->sp-1] = push >> 8 & 0xff;
+			   state->memory[state->sp-1] = (push >> 8) & 0xff;
 			   state->memory[state->sp-2] = push & 0xff;
 			   state->sp -= 2;
 			   state->pc = 0x0038;
@@ -1903,6 +1931,19 @@ int Emulate8080p(State8080* state)
 		printf("A $%02x B $%02x C $%02x D $%02x E $%02x H $%02x L $%02x SP %04x, INC %04x CYCLES %04x\n", state->a, state->b, state->c,
            	state->d, state->e, state->h, state->l, state->sp, state->pc - prev_pc, cycles);
 	#endif
+	
+	if ( (abs(state->lastSp - state->sp) > 2) && (state->lastSp > 0))  
+	{  
+        printf("Stack Squash? This shouldn't display on an interrupt, last sp %x, sp %x. Exiting...\n", state->lastSp, state->sp);    
+		exit(0);
+	}
+	if ((state->sp!= 0) && (state->sp < 0x2300))
+	{
+		printf("Stack pointer shouldn't be this low probably. Exiting...\n");
+		exit(0);
+	}
+	
+    state->lastSp = state->sp;    
 	return cycles;
 }
 
