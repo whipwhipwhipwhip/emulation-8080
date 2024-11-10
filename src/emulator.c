@@ -1183,50 +1183,67 @@ int Emulate8080p(State8080* state)
 			   break;
 		case 0xa0: // ANA B
 			   {
+			   uint8_t ac = (state->a | state-> b) & 0x8 != 0;
 			   state->a = state->a & state->b;
 			   logicFlags(state);
+			   state->cc.ac = ac;
 			   }
 			   break;
 		case 0xa1: // ANA C
 			   {
+			   uint8_t ac = (state->a | state-> c) & 0x8 != 0;
 			   state->a = state->a & state->c;
 			   logicFlags(state);
+			   state->cc.ac = ac;
 			   }
 			   break;
 		case 0xa2: // ANA D
 			   {
+			   uint8_t ac = (state->a | state->d) & 0x8 != 0;
 			   state->a = state->a & state->d;
 			   logicFlags(state);
+			   state->cc.ac = ac;
 			   }
 			   break;
 		case 0xa3: // ANA E
 			   {
+			   uint8_t ac = (state->a | state-> e) & 0x8 != 0;
 			   state->a = state->a & state->e;
 			   logicFlags(state);
+			   state->cc.ac = ac;
 			   }
 			   break;
 		case 0xa4: // ANA H
 			   {
+			   uint8_t ac = (state->a | state->h) & 0x8 != 0;
 			   state->a = state->a & state->h;
 			   logicFlags(state);
+			   state->cc.ac = ac;
 			   }
 			   break;
 		case 0xa5: // ANA L
 			   {
+			   uint8_t ac = (state->a | state->l) & 0x8 != 0;
 			   state->a = state->a & state->l;
 			   logicFlags(state);
+			   state->cc.ac = ac;
 			   }
 			   break;
 		case 0xa6: // ANA M
 			   {
-			   state->a = state->a & memoryFromHL(state);
+			   uint8_t s2 = memoryFromHL(state);
+			   uint8_t ac = (state->a | s2) & 0x8 != 0;
+			   state->a = state->a & s2;
 			   logicFlags(state);
+			   state->cc.ac = ac;
 			   }
 			   break;
 		case 0xa7: // ANA A
 			   {
+			   uint8_t ac = (state->a | state->a) & 0x8 != 0;
 			   state->a = state->a & state->a;
 			   logicFlags(state);
+			   state->cc.ac = ac;
 			   }
 			   break;
 		case 0xa8: // XRA B
@@ -1734,9 +1751,11 @@ int Emulate8080p(State8080* state)
 			   break;
 		case 0xe6: // ANI
 			   {
+				uint8_t ac = (state->a | opcode[1]) & 0x8 != 0;
 				state->a = state->a & opcode[1];
 				logicFlags(state);
 				state->pc++;
+				state->cc.ac = ac;
 			   }
 			   break;
 		case 0xe7: // RST 4
