@@ -61,20 +61,20 @@ int parity(int x, int size)
 
 void arithmeticFlags(State8080 *state, uint16_t answer, uint16_t s2)
 {
-	uint16_t s1 = (uint16_t) state->a;
 	state->cc.z = (answer&0xff) == 0;
 	state->cc.s = (answer&0x80) > 0;
 	state->cc.cy = (answer > 0xff);
 	state->cc.p = parity(answer&0xff, 8);
 	// To test auxiliary carry, see if sum of individual bits equals result bit
-	uint8_t summands = (s1 & 0x08) + (s2 & 0x08);
-	uint8_t res_bit = (answer & 0x08);
-	state->cc.ac = (summands == 16) | (summands == 8 & res_bit == 0);
+	//uint8_t summands = (s1 & 0x08) + (s2 & 0x08);
+	//uint8_t res_bit = (answer & 0x08);
+	//state->cc.ac = (summands == 16) | (summands == 8 & res_bit == 0);
 }
 
 void logicFlags(State8080 *state)
 {
 	state->cc.cy = 0;
+	state->cc.ac = 0;
 	state->cc.z = state->a == 0;
 	state->cc.s = (state->a&0x80) == 0x80;
 	state->cc.p = parity(state->a, 8);
@@ -134,20 +134,24 @@ int Emulate8080p(State8080* state)
 			   break;
 		case 0x04: // INR B
 			   {
-			   uint16_t answer = (uint16_t) state->b + 1;
+			   uint16_t s1 = (uint16_t) state->b;
+			   uint16_t answer = s1 + 1;
 			   uint8_t pv_cy = state->cc.cy;
 			   arithmeticFlags(state, answer, 0x01);
 			   state->cc.cy = pv_cy;
+			   state->cc.ac = (answer&0xF) == 0;
 			   state->b = (uint8_t) answer;
 			   }
 			   break;
 		case 0x05: // DCR B
 			   {
+			   uint16_t s1 = (uint16_t) state->b;
 			   uint16_t s2 = ~(0x01) + 1;
-			   uint16_t answer = (uint16_t) state->b + s2;
+			   uint16_t answer = s1 + s2;
 			   uint8_t pv_cy = state->cc.cy;
 			   arithmeticFlags(state, answer, s2);
 			   state->cc.cy = pv_cy;
+			   state->cc.ac = !((answer&0xF) == 0xF);
 			   state->b = (uint8_t) answer;
 			   }
 			   break;
@@ -189,20 +193,24 @@ int Emulate8080p(State8080* state)
 			   break;
 		case 0x0c: // INR C
 			   {
-			   uint16_t answer = (uint16_t) state->c + 1;
+			   uint16_t s1 = (uint16_t) state->c;
+			   uint16_t answer = s1 + 1;
 			   uint8_t pv_cy = state->cc.cy;
 			   arithmeticFlags(state, answer, 0x01);
 			   state->cc.cy = pv_cy;
+			   state->cc.ac = (answer&0xF) == 0;
 			   state->c = (uint8_t) answer;
 			   }
 			   break;
 		case 0x0d: // DCR C
 			   {
+			   uint16_t s1 = (uint16_t) state->c;
 			   uint16_t s2 = ~(0x01) + 1;
-			   uint16_t answer = (uint16_t) state->c + s2;
+			   uint16_t answer = s1 + s2;
 			   uint8_t pv_cy = state->cc.cy;
 			   arithmeticFlags(state, answer, s2);
 			   state->cc.cy = pv_cy;
+			   state->cc.ac = !((answer&0xF) == 0xF);
 			   state->c = (uint8_t) answer;
 			   }
 			   break;
@@ -242,20 +250,24 @@ int Emulate8080p(State8080* state)
 			   break;
 		case 0x14: // INR D
 			   {
-			   uint16_t answer = (uint16_t) state->d + 1;
+			   uint16_t s1 = (uint16_t) state->d;
+			   uint16_t answer = s1 + 1;
 			   uint8_t pv_cy = state->cc.cy;
 			   arithmeticFlags(state, answer, 0x01);
 			   state->cc.cy = pv_cy;
+			   state->cc.ac = (answer&0xF) == 0;
 			   state->d = (uint8_t) answer;
 			   }
 			   break;
 		case 0x15: // DCR D
 			   {
+			   uint16_t s1 = (uint16_t) state->d;
 			   uint16_t s2 = ~(0x01) + 1;
-			   uint16_t answer = (uint16_t) state->d + s2;
+			   uint16_t answer = s1 + s2;
 			   uint8_t pv_cy = state->cc.cy;
 			   arithmeticFlags(state, answer, s2);
 			   state->cc.cy = pv_cy;
+			   state->cc.ac = !((answer&0xF) == 0xF);
 			   state->d = (uint8_t) answer;
 			   }
 			   break;
@@ -302,6 +314,7 @@ int Emulate8080p(State8080* state)
 			   uint8_t pv_cy = state->cc.cy;
 			   arithmeticFlags(state, answer, 0x01);
 			   state->cc.cy = pv_cy;
+			   state->cc.ac = (answer&0xF) == 0;
 			   state->e = (uint8_t) answer;
 			   }
 			   break;
@@ -312,6 +325,7 @@ int Emulate8080p(State8080* state)
 			   uint8_t pv_cy = state->cc.cy;
 			   arithmeticFlags(state, answer, s2);
 			   state->cc.cy = pv_cy;
+			   state->cc.ac = !((answer&0xF) == 0xF);
 			   state->e = (uint8_t) answer;
 			   }
 			   break;
@@ -357,6 +371,7 @@ int Emulate8080p(State8080* state)
 			   uint8_t pv_cy = state->cc.cy;
 			   arithmeticFlags(state, answer, 0x01);
 			   state->cc.cy = pv_cy;
+			   state->cc.ac = (answer&0xF) == 0;
 			   state->h = (uint8_t) answer;
 			   }
 			   break;
@@ -367,6 +382,7 @@ int Emulate8080p(State8080* state)
 			   uint8_t pv_cy = state->cc.cy;
 			   arithmeticFlags(state, answer, s2);
 			   state->cc.cy = pv_cy;
+			   state->cc.ac = !((answer&0xF) == 0xF);
 			   state->h = (uint8_t) answer;
 			   }
 			   break;
@@ -428,6 +444,7 @@ int Emulate8080p(State8080* state)
 			   uint8_t pv_cy = state->cc.cy;
 			   arithmeticFlags(state, answer, 0x01);
 			   state->cc.cy = pv_cy;
+			   state->cc.ac = (answer&0xF) == 0;
 			   state->l = (uint8_t) answer;
 			   }
 			   break;
@@ -438,6 +455,7 @@ int Emulate8080p(State8080* state)
 			   uint8_t pv_cy = state->cc.cy;
 			   arithmeticFlags(state, answer, s2);
 			   state->cc.cy = pv_cy;
+			   state->cc.ac = !((answer&0xF) == 0xF);
 			   state->l = (uint8_t) answer;
 			   }
 			   break;
@@ -482,6 +500,7 @@ int Emulate8080p(State8080* state)
 			   //state->l = answer & 0xff;
 			   uint16_t mem_set = (state->h << 8) | state->l;
 			   writeMemoryAt(state, mem_set, answer);
+			   state->cc.ac = (answer&0xF) == 0;
 			   }
 			   break;
 		case 0x35: // DCR M
@@ -492,13 +511,9 @@ int Emulate8080p(State8080* state)
 			   uint8_t pv_cy = state->cc.cy;
 			   arithmeticFlags(state, answer, s2);
 			   state->cc.cy = pv_cy;
+			   state->cc.ac = !((answer&0xF) == 0xF);
 			   //state->h = (answer & 0xff00) >> 8;
 			   //state->l = answer & 0xff;
-			   if(state->pc == 0x1d)
-			   {
-				printf("Prior isrDelay value is %x\n", prior_delay);
-				printf("Current isrDelay value is %x\n", answer);
-			   }
 			   uint16_t mem_set = (state->h << 8) | state->l;
 			   writeMemoryAt(state, mem_set, answer);
 			   }
@@ -546,6 +561,7 @@ int Emulate8080p(State8080* state)
 			   uint8_t pv_cy = state->cc.cy;
 			   arithmeticFlags(state, answer, 0x01);
 			   state->cc.cy = pv_cy;
+			   state->cc.ac = (answer&0xF) == 0;
 			   state->a = (uint8_t) answer;
 			   }
 			   break;
@@ -556,6 +572,7 @@ int Emulate8080p(State8080* state)
 			   uint8_t pv_cy = state->cc.cy;
 			   arithmeticFlags(state, answer, s2);
 			   state->cc.cy = pv_cy;
+			   state->cc.ac = !((answer&0xF) == 0xF);
 			   state->a = (uint8_t) answer;
 			   }
 			   break;
@@ -912,6 +929,7 @@ int Emulate8080p(State8080* state)
 			   uint16_t s2 = (uint16_t) state->b;
 			   uint16_t answer = (uint16_t) state->a + s2;
 			   arithmeticFlags(state, answer, s2);
+			   state->cc.ac = (answer&0xF) == 0;
 			   state->a = answer & 0xff;
 			   }
 			   break;
