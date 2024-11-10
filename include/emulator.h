@@ -28,6 +28,7 @@ typedef struct State8080 {
 	uint8_t		*memory;
 	struct		ConditionCodes cc;
 	uint8_t		int_enable;
+	uint8_t     success;
 } State8080;
 
 int Emulate8080p(State8080* state);
