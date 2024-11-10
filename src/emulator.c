@@ -87,7 +87,7 @@ uint8_t memoryFromHL(State8080 *state)
 }
 
 # define PRINTOPS 0
-# define FOR_CPUDIAG false
+# define FOR_CPUDIAG true
 
 int Emulate8080p(State8080* state)
 {
@@ -376,6 +376,25 @@ int Emulate8080p(State8080* state)
 			   state->pc += 1;
 			   }
 			   break;
+		case 0x27: //DAA
+			   {
+				uint8_t toAdd = 0;
+				uint8_t lo = state->a & 0x0f;
+				uint8_t hi = state->a >> 4;
+				if ((state->cc.ac) | (state->a & 0x0f > 0x09));
+				{
+					toAdd += 0x06;
+				}
+				if ((state->cc.cy | ((state->a >> 4) > 0x09)) | ((state->a >> 4) >= 9 & (state->a & 0x0f > 0x09)))
+				{
+					toAdd += 0x60;
+					state->cc.cy = 1;
+				}
+				state->a += toAdd;
+				state->cc.p = parity(state->a, 8);
+				state->cc.s = ((state->a & 0x80) == 0x80);
+				state->cc.z = (state->a&0xff) == 0;
+			   }
 		case 0x28: break;
 		case 0x29: // DAD H
 			   {
@@ -1468,17 +1487,18 @@ int Emulate8080p(State8080* state)
                     while (*str != '$')    
                         printf("%c", *str++);    
                     printf("\n");    
+					state->success = 1;
                 }    
                 else if (state->c == 2)    
                 {    
                     //saw this in the inspected code, never saw it called    
-                    printf ("print char routine called\n");    
+                    putchar(state->e);
                 }    
             }    
-            else if (0 ==  ((opcode[2] << 8) | opcode[1]))    
-            {    
-                exit(0);    
-            }    
+            //else if (0 ==  ((opcode[2] << 8) | opcode[1]))    
+            //{    
+            //    exit(0);    
+            //}    
             else    
    			#endif
 			   {    
@@ -1931,7 +1951,7 @@ int Emulate8080p(State8080* state)
 		printf("A $%02x B $%02x C $%02x D $%02x E $%02x H $%02x L $%02x SP %04x, INC %04x CYCLES %04x\n", state->a, state->b, state->c,
            	state->d, state->e, state->h, state->l, state->sp, state->pc - prev_pc, cycles);
 	#endif
-	
+	/*
 	if ( (abs(state->lastSp - state->sp) > 2) && (state->lastSp > 0))  
 	{  
         printf("Stack Squash? This shouldn't display on an interrupt, last sp %x, sp %x. Exiting...\n", state->lastSp, state->sp);    
@@ -1942,6 +1962,7 @@ int Emulate8080p(State8080* state)
 		printf("Stack pointer shouldn't be this low probably. Exiting...\n");
 		exit(0);
 	}
+	*/
 	
     state->lastSp = state->sp;    
 	return cycles;

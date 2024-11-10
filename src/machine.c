@@ -30,10 +30,10 @@ uint8_t InPort(uint8_t port_bit)
     {
         //Attract mode, no coin in, P2 start? why not 0? test - experiment with these when working
         case 0:
-            return 0xd;
+            return 1;
         //Attract mode, no player starts etc
         case 1:
-            return 1;
+            return 0;
         case 3:
         {
             uint16_t v = (sim->shift1<<8) | sim->shift0;    
@@ -168,7 +168,7 @@ void doEmulation()
 {
     int quit = 0;
     // set to 1Mhz because there are interrupts at the midpoint and end of frame
-    static int clockSpeed = 1e6 / 2;
+    static int clockSpeed = 1e6;
     static int FPS = 60;
     uint32_t lastTime = 1000 * SDL_GetTicks();
     sim->lastTimer = lastTime;
