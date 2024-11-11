@@ -26,6 +26,8 @@ typedef struct State8080 {
 	uint16_t	sp;
 	uint16_t    lastSp;
 	uint16_t	pc;
+	uint16_t    port1;
+	uint16_t    port2;
 	uint8_t		*memory;
 	struct		ConditionCodes cc;
 	uint8_t		int_enable;
