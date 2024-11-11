@@ -52,33 +52,34 @@ void doCPUTest()
 
     int cycleBlock = 100;
     int iter = 0;
-
     while (1)
     {
-        unsigned char *op = &state->memory[state->pc];
-        int pc = state->pc;
-
-        if (pc == 0x0005) {
-            if (state->c == 9) {
-                int i;
-                uint16_t offset = (state->d<<8) | (state->e);  
-                for (i = offset; state->memory[i] != '$'; i += 1)
-                    putchar(state->memory[i]);
-                success = 1;
-            }
-            if (state->c == 2) putchar((char)state->e);
-        }
-
-        Emulate8080p(state);
-        if(state->pc == 0)
+        for(int i = 0; i < 1000000; i++)
         {
-            printf("Reached end, or failed?? Success is %x, jumped to 0 from %04X\n", state->success, pc);
-            if (state->success)
-                exit(1);
-            return;
+            unsigned char *op = &state->memory[state->pc];
+            int pc = state->pc;
+
+            if (pc == 0x0005) {
+                if (state->c == 9) {
+                    int i;
+                    uint16_t offset = (state->d<<8) | (state->e);  
+                    for (i = offset; state->memory[i] != '$'; i += 1)
+                        putchar(state->memory[i]);
+                    success = 1;
+                }
+                if (state->c == 2) putchar((char)state->e);
+            }
+
+            Emulate8080p(state);
+            if(state->pc == 0)
+            {
+                printf("\nReached end, or failed?? Success is %x, jumped to 0 from %04X\n", state->success, pc);
+                if (state->success)
+                    exit(1);
+                return;
+            }
         }
         //getchar();
-        
     }
 }
 
