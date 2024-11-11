@@ -10,6 +10,7 @@
 #include "emulator.h"
 #include "machine.h"
 #include "graphics.h"
+#include "io_devices.h"
 
 #define TITLE "Space Invaders"
 #define HEIGHT 256
@@ -33,7 +34,9 @@ uint8_t InPort(uint8_t port_bit)
             return 1;
         //Attract mode, no player starts etc
         case 1:
-            return 0;
+            return sim->state->port1;
+        case 2:
+            return sim->state->port2;
         case 3:
         {
             uint16_t v = (sim->shift1<<8) | sim->shift0;    
@@ -41,7 +44,7 @@ uint8_t InPort(uint8_t port_bit)
             return a;
         }
         default:
-            return a;
+            printf("\nError, In ports should only be 0,1,2,3, and we tried %x\n", port_bit);
     }
 }
 
@@ -76,7 +79,7 @@ void generate_interrupt(State8080* state, int interrupt_num)
     // set interrupts to null until they're reenabled
     //state->int_enable = 0;  
 
-    printf("Just executed interrupt %x\n", interrupt_num);
+    //printf("Just executed interrupt %x\n", interrupt_num);
 }
 
 void readFile(char* filename, uint32_t offset)
@@ -164,13 +167,9 @@ void runFrame()
 void doEmulation()
 {
     int quit = 0;
-    // set to 1Mhz because there are interrupts at the midpoint and end of frame
-    static int clockSpeed = 1e6;
-    static int FPS = 60;
     uint32_t lastTime = 1000 * SDL_GetTicks();
     sim->lastTimer = lastTime;
     sim->whichInterrupt = 0;
-    unsigned char *op;
 
     while (quit == 0)
     {
@@ -179,6 +178,15 @@ void doEmulation()
 			    quit = 1;
 			    return;
 		    }
+            if(event.type == SDL_KEYDOWN) {
+                int key = event.key.keysym.sym;
+                processKeyPress(key, sim->state);
+            }
+
+            if(event.type == SDL_KEYUP) {
+                int key = event.key.keysym.sym;
+                processKeyRelease(key, sim->state);
+            }
         }	
 
         runFrame();

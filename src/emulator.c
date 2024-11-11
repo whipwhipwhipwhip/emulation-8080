@@ -430,6 +430,7 @@ int Emulate8080p(State8080* state)
 				state->cc.p = parity(state->a, 8);
 				state->cc.s = ((state->a & 0x80) == 0x80);
 				state->cc.z = (state->a&0xff) == 0;
+				//Should be fine?
 				summandAC(state, state->a, s1, toAdd);
 			   }
 		case 0x28: break;
