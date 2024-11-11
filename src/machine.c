@@ -68,12 +68,9 @@ void generate_interrupt(State8080* state, int interrupt_num)
 	state->memory[state->sp-1] = (push >> 8) & 0xff;
 	state->memory[state->sp-2] = push & 0xff;
 	state->sp -= 2;
-    state->lastSp = state->sp;
-    //perform "PUSH PC"    
-    //Push(state, (state->pc & 0xFF00) >> 8, (state->pc & 0xff));    
+    state->lastSp = state->sp;  
 
-    //Set the PC to the low memory vector.    
-    //This is identical to an "RST interrupt_num" instruction.    
+    //Set the PC to the low memory vector.      
     state->pc = 8 * interrupt_num; 
 
     // set interrupts to null until they're reenabled
@@ -189,104 +186,6 @@ void doEmulation()
 
     }
 }
-
-void doEmulation_Old()
-{
-    int quit = 0;
-    // set to 1Mhz because there are interrupts at the midpoint and end of frame
-    static int clockSpeed = 1e6;
-    static int FPS = 60;
-    uint32_t lastTime = 1000 * SDL_GetTicks();
-    sim->lastTimer = lastTime;
-    sim->whichInterrupt = 0;
-    int inst = 0;
-    unsigned char *op;
-
-    while (quit == 0)
-    {
-        while(SDL_PollEvent(&event) != 0) {
-		    if(event.type == SDL_QUIT) {
-			    quit = 1;
-			    break;
-		    }
-	    }	
-
-        for(int i = 0; i < 2; i ++)
-        {
-            sim->whichInterrupt = i+1;
-            int cycles = 0;
-            inst = 0;
-            // change back to clockSpeed / FPS
-            while (cycles < clockSpeed / FPS)
-            {
-
-                op = &sim->state->memory[sim->state->pc];
-                if (*op == 0xdb) //machine specific handling for IN
-                {
-                    sim->state->a = InPort(op[1]);
-                    sim->state->pc += 2;
-                    cycles+=3;
-                    inst +=1;
-                }
-                else if (*op == 0xd3) //machine specific handling for OUT
-                {
-                    OutPort(op[1], sim->state->a);
-                    sim->state->pc += 2;
-                    cycles+=3;
-                    inst+=1;
-                }
-                else
-                    cycles += Emulate8080p(sim->state);
-                    inst+=1;
-            }
-            getchar();
-            generate_interrupt(sim->state, sim->whichInterrupt);
-            DrawGraphics(sim);
-            getchar();
-        }
-
-    }
-}
-
-void doCPUTest()
-{
-    int success = 0;
-     //Fix the first instruction to be JMP 0x100    
-    state->memory[0]=0xc3;    
-    state->memory[1]=0;    
-    state->memory[2]=0x01;    
-
-    //Fix the stack pointer from 0x6ad to 0x7ad    
-    // this 0x06 byte 112 in the code, which is    
-    // byte 112 + 0x100 = 368 in memory    
-    state->memory[368] = 0x7;    
-
-    //Skip DAA test    
-    state->memory[0x59c] = 0xc3; //JMP    
-    state->memory[0x59d] = 0xc2;    
-    state->memory[0x59e] = 0x05;    
-
-    int cycleBlock = 100;
-    int iter = 0;
-
-    while (1)
-    {
-        int cycles = 0;
-        while (cycles < cycleBlock)
-        {
-            unsigned char *op = &state->memory[state->pc];
-            if(*op == 0x0)
-            {
-                printf("Reached end, or failed. Exiting...\n");
-                exit(0);
-            }
-            cycles += Emulate8080p(state);
-        }
-        //getchar();
-        iter++;
-    }
-}
-
 
 int main(int argc, char * argv[])
 {

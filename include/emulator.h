@@ -22,6 +22,7 @@ typedef struct State8080 {
 	uint8_t		e;
 	uint8_t		h;
 	uint8_t		l;
+	uint8_t     inst;
 	uint16_t	sp;
 	uint16_t    lastSp;
 	uint16_t	pc;
