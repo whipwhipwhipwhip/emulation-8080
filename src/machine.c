@@ -29,10 +29,8 @@ uint8_t InPort(uint8_t port_bit)
     uint8_t a = 0;
     switch(port_bit)
     {
-        //Attract mode, no coin in, P2 start? why not 0? test - experiment with these when working
         case 0:
             return 1;
-        //Attract mode, no player starts etc
         case 1:
             return sim->state->port1;
         case 2:
@@ -45,6 +43,7 @@ uint8_t InPort(uint8_t port_bit)
         }
         default:
             printf("\nError, In ports should only be 0,1,2,3, and we tried %x\n", port_bit);
+            exit(1);
     }
 }
 
@@ -56,10 +55,26 @@ void OutPort(uint8_t port_bit, uint8_t value)
         case 2:
             sim->shift_offset = value & 0x7;
             break;
+        // Discrete Sounds
+        case 3:
+            if (value <= 3 && (sim->state->prevWrite3 != value))
+            {
+                playSound(value, 0);
+                sim->state->prevWrite3 = value;
+            }
+            break;
         // shift data
         case 4:
             sim->shift0 = sim->shift1;
             sim->shift1 = value;
+            break;
+         // Discrete Sounds
+        case 5:
+            if (value <= 4 && (sim->state->prevWrite5 != value))
+            {
+                playSound(value, 4);
+                sim->state->prevWrite5 = value;
+            }
             break;
     }
   
@@ -77,9 +92,7 @@ void generate_interrupt(State8080* state, int interrupt_num)
     state->pc = 8 * interrupt_num; 
 
     // set interrupts to null until they're reenabled
-    //state->int_enable = 0;  
-
-    //printf("Just executed interrupt %x\n", interrupt_num);
+    state->int_enable = 0;  
 }
 
 void readFile(char* filename, uint32_t offset)
@@ -95,7 +108,6 @@ void readFile(char* filename, uint32_t offset)
 	fseek(f, 0L, SEEK_SET);
 	
 	uint8_t *buffer = &sim->state->memory[offset];
-    //uint8_t *buffer = &state->memory[offset];
 	fread(buffer, fsize, 1, f);
 	fclose(f);
 }
@@ -203,10 +215,11 @@ int main(int argc, char * argv[])
     sim->state->memory = malloc(16 * 0x1000);
     sim->state->int_enable = 1;
 
-    initialise_graphics(sim);
+    //sim->audio_player = (AudioPlayer *) calloc(1, sizeof(AudioPlayer));
+    //sim->audio_player->sounds = malloc(9 * sizeof(Mix_Chunk));
 
-    //state = (State8080*) calloc(1, sizeof(State8080));
-    //state->memory = malloc(16 * 0x1000);
+    initialise_graphics(sim);
+    setupAudio(sim);
     
     readFile(argv[1], 0);
     readFile(argv[2], 0x800);
@@ -214,6 +227,5 @@ int main(int argc, char * argv[])
     readFile(argv[4], 0x1800);
 
     doEmulation();
-    //doCPUTest();
 
 }

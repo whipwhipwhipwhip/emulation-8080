@@ -2,12 +2,14 @@
 #define MACHINE_H
 #include<stdint.h>
 #include "emulator.h"
+#include "io_devices.h"
 
 
 typedef struct SpaceInvadersMachine {
 	// Colon means use only that number of bits
 	// uint8_t unsigned 8 bit integer
 	State8080 *state;
+    AudioPlayer *audio_player;
 
     double lastTimer;
     double nextInterrupt;
