@@ -15,9 +15,9 @@ static int NUM_SOUNDS = 9;
 const static char* _wavFileNames[] =
 {
     "../../sounds/ufo_highpitch.wav",
-    "../../sounds/invaderkilled.wav",
-    "../../sounds/explosion.wav",
     "../../sounds/shoot.wav",
+    "../../sounds/explosion.wav",
+    "../../sounds/invaderkilled.wav",
     "../../sounds/fastinvader1.wav",
     "../../sounds/fastinvader2.wav",
     "../../sounds/fastinvader3.wav",
