@@ -65,39 +65,14 @@ void processKeyRelease(int key, State8080* state)
 
 }
 
-void setupAudioNew(SpaceInvadersMachine* sim)
-{
-
-    if(Mix_OpenAudio(44100, AUDIO_S16SYS, 2, 512) != 0)
-    {
-        printf("Error on initialising audio system. Exiting...\n");
-    }
-
-    Mix_AllocateChannels(4);
-
-    for(int i = 0; i < NUM_SOUNDS; i++)
-    {
-        sim_audio.soundLocations[i] = _wavFileNames[i];
-        sim_audio.sounds[i] = Mix_LoadWAV(sim_audio.soundLocations[i]);
-        if (sim_audio.sounds[i] == NULL) {
-            printf("Failed to load sound: %s\n", Mix_GetError());
-        }
-    }
-}
-
 void setupAudio(SpaceInvadersMachine* sim)
 {
-    //sim_audio = calloc(1, sizeof(AudioPlayer));
 
     if(Mix_OpenAudio(44100, AUDIO_S16SYS, 2, 512) != 0)
     {
         printf("Error on initialising audio system. Exiting...\n");
     }
 
-    //Mix_Chunk* sounds[9] = malloc(9 * sizeof(Mix_Chunk));
-    //memcpy(sim_audio->soundLocations, _wavFileNames, sizeof(_wavFileNames));
-    //sim_audio->soundLocations = memcpy(sim_audio->soundLocations, _wavFileNames);
-    //sim_audio->sounds = malloc(9 * sizeof(Mix_Chunk));
     sim_audio.sounds = malloc(9 * sizeof(Mix_Chunk));
 
     Mix_AllocateChannels(4);
@@ -106,15 +81,25 @@ void setupAudio(SpaceInvadersMachine* sim)
     {
         sim_audio.soundLocations[i] = _wavFileNames[i];
         sim_audio.sounds[i] = Mix_LoadWAV(sim_audio.soundLocations[i]);
-        //if (sim_audio.sounds[i] == NULL) {
-         //   printf("Failed to load sound: %s\n", Mix_GetError());
-        //}
+        if (sim_audio.sounds[i] == NULL) {
+           printf("Failed to load sound: %s\n", Mix_GetError());
+        }
     }
 }
 
 void playSound(uint8_t soundIndex, int offset)
 {
     int trueIndex = ((int) soundIndex) + offset;
-    Mix_PlayChannel(-1, sim_audio.sounds[soundIndex], 0);
+    printf("%d %d %d", trueIndex, soundIndex, offset);
+    printf("\n");
+    for (int bit = 0; bit != 5; ++bit) {
+        if (soundIndex & (0b1 << bit))
+        {
+            printf("%d %d", bit, offset);
+            printf("\n");
+            Mix_PlayChannel(-1, sim_audio.sounds[bit+offset], 0);
+        }
+    }
+    
 }
 
