@@ -57,7 +57,6 @@ void OutPort(uint8_t port_bit, uint8_t value)
             break;
         // Discrete Sounds
         case 3:
-            value = value-32;
             if ((sim->state->prevWrite3 != value))
             {
                 playSound(value, 0);
@@ -71,7 +70,7 @@ void OutPort(uint8_t port_bit, uint8_t value)
             break;
          // Discrete Sounds
         case 5:
-            if (value <= 16 && (sim->state->prevWrite5 != value))
+            if (sim->state->prevWrite5 != value)
             {
                 playSound(value, 4);
                 sim->state->prevWrite5 = value;

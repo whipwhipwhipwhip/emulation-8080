@@ -35,6 +35,18 @@ void processKeyPress(int key, State8080* state)
         case SDLK_RETURN:
             state->port1 |= 1 << 2;
             break;
+        case SDLK_p:
+            state->port1 |= 1 << 1;
+            break;
+        case SDLK_s:
+            state->port2 |= 1 << 4;
+            break;
+        case SDLK_a:
+            state->port2 |= 1 << 5;
+            break;
+        case SDLK_d:
+            state->port2 |= 1 << 6;
+            break;
     }
 
 }
@@ -60,6 +72,18 @@ void processKeyRelease(int key, State8080* state)
             break;
         case SDLK_RETURN:
             state->port1 &= ~(1 << 2);
+            break;
+        case SDLK_p:
+            state->port1 &= ~(1 << 1);
+            break;
+        case SDLK_s:
+            state->port2 &= ~(1 << 4);
+            break;
+        case SDLK_a:
+            state->port2 &= ~(1 << 5);
+            break;
+        case SDLK_d:
+            state->port2 &= ~(1 << 6);
             break;
     }
 
