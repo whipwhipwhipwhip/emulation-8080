@@ -115,12 +115,13 @@ void readFile(char* filename, uint32_t offset)
 void runFrame()
 {
     //time in microseconds
-    double time_now = 1000 *SDL_GetTicks();
     static int clockSpeed = 1e6;
     static int FPS = 60;
     int cycles_to_run = floor(clockSpeed / FPS);
+    int milisPerFrame = ceil(1000 / FPS);
     int cycles_performed = 0;
     unsigned char* op;
+    printf("%d \n", milisPerFrame);
 
     // we start by setting the next interrupt time if necessary
     if(sim->lastTimer == 0.0)
@@ -129,49 +130,45 @@ void runFrame()
         exit(0);
     }
 
-    sim->nextInterrupt = time_now + cycles_to_run;
+    
     sim->whichInterrupt = 1;
+    unsigned long long time_now;
 
     // now run a full frame of cycles
     for(int i = 0; i < 2; i ++)
     {
+        time_now = SDL_GetTicks64();
         cycles_performed = 0;
         // in here, a half frame that will culminate in an interrupt
         while(cycles_performed < cycles_to_run)
         {
-            double time_elapsed = 1000 * SDL_GetTicks() - sim->lastTimer;
-            int cycles_needed = 2 * time_elapsed;
-            int batch_cycles = 0;
-
-            while(batch_cycles < cycles_needed)
+            op = &sim->state->memory[sim->state->pc];
+            if (*op == 0xdb) //machine specific handling for IN
             {
-                op = &sim->state->memory[sim->state->pc];
-                if (*op == 0xdb) //machine specific handling for IN
-                {
-                    sim->state->a = InPort(op[1]);
-                    sim->state->pc += 2;
-                    batch_cycles+=3;
-                }
-                else if (*op == 0xd3) //machine specific handling for OUT
-                {
-                    OutPort(op[1], sim->state->a);
-                    sim->state->pc += 2;
-                    batch_cycles+=3;
-                }
-                else
-                    batch_cycles += Emulate8080p(sim->state);
+                sim->state->a = InPort(op[1]);
+                sim->state->pc += 2;
+                cycles_performed+=3;
             }
-            cycles_performed += batch_cycles;
-            sim->lastTimer = 1000 * SDL_GetTicks();
+            else if (*op == 0xd3) //machine specific handling for OUT
+            {
+                OutPort(op[1], sim->state->a);
+                sim->state->pc += 2;
+                cycles_performed+=3;
+            }
+            else
+                cycles_performed += Emulate8080p(sim->state);
         }
         // Now done, perform the interrupt and repeat
         if(sim->state->int_enable)
         {
             generate_interrupt(sim->state, sim->whichInterrupt);
             sim->whichInterrupt = (sim->whichInterrupt == 1)? 2: 1;
-            time_now = 1000 * SDL_GetTicks();
-            sim->nextInterrupt = time_now + 8000;
         }
+
+        // Sleep until next 0.5 frame
+       // printf("%d \n", milisPerFrame - (SDL_GetTicks64() - time_now));
+        printf("%d \n", (SDL_GetTicks64() - time_now));
+        SDL_Delay(fmax(0LL, milisPerFrame - (SDL_GetTicks64() - time_now)));
     }
 
 }
