@@ -6,3 +6,4 @@ Status:
 Todo:
 1. Refactor code into components better
 2. Pass all CPU tests
+3. Make the timing calculations more generic
