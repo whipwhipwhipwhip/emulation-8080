@@ -12,19 +12,9 @@
 #include "graphics.h"
 #include "io_devices.h"
 
-#define TITLE "Space Invaders"
-#define HEIGHT 256
-#define WIDTH 224
-
-SDL_Surface *surf;
-int resizef;
-SDL_Window *win;
-SDL_Surface *winsurf;
-SpaceInvadersMachine *sim;
 SDL_Event event;
-State8080 *state;
 
-uint8_t InPort(uint8_t port_bit)
+uint8_t InPort(SpaceInvadersMachine *sim, uint8_t port_bit)
 {
     uint8_t a = 0;
     switch(port_bit)
@@ -47,8 +37,9 @@ uint8_t InPort(uint8_t port_bit)
     }
 }
 
-void OutPort(uint8_t port_bit, uint8_t value)
+void OutPort(SpaceInvadersMachine * sim, uint8_t port_bit)
 {
+    uint8_t value = sim->state->a;
     switch(port_bit)
     {
         // shift amount
@@ -59,7 +50,7 @@ void OutPort(uint8_t port_bit, uint8_t value)
         case 3:
             if ((sim->state->prevWrite3 != value))
             {
-                playSound(value, 0);
+                playSound(sim->audio_player, value, 0);
                 sim->state->prevWrite3 = value;
             }
             break;
@@ -72,7 +63,7 @@ void OutPort(uint8_t port_bit, uint8_t value)
         case 5:
             if (sim->state->prevWrite5 != value)
             {
-                playSound(value, 4);
+                playSound(sim->audio_player, value, 4);
                 sim->state->prevWrite5 = value;
             }
             break;
@@ -95,24 +86,7 @@ void generate_interrupt(State8080* state, int interrupt_num)
     state->int_enable = 0;  
 }
 
-void readFile(char* filename, uint32_t offset)
-{
-	FILE *f= fopen(filename, "rb");
-	if (f==NULL)
-	{
-		printf("error: Couldn't open %s\n", filename);
-		exit(1);
-	}
-	fseek(f, 0L, SEEK_END);
-	int fsize = ftell(f);
-	fseek(f, 0L, SEEK_SET);
-	
-	uint8_t *buffer = &sim->state->memory[offset];
-	fread(buffer, fsize, 1, f);
-	fclose(f);
-}
-
-void runFrame()
+void runFrame(SpaceInvadersMachine *sim)
 {
     //time in microseconds
     static int clockSpeed = 1e6;
@@ -121,7 +95,6 @@ void runFrame()
     int milisPerFrame = ceil(1000 / FPS);
     int cycles_performed = 0;
     unsigned char* op;
-    printf("%d \n", milisPerFrame);
 
     // we start by setting the next interrupt time if necessary
     if(sim->lastTimer == 0.0)
@@ -145,20 +118,20 @@ void runFrame()
             op = &sim->state->memory[sim->state->pc];
             if (*op == 0xdb) //machine specific handling for IN
             {
-                sim->state->a = InPort(op[1]);
+                sim->state->a = InPort(sim, op[1]);
                 sim->state->pc += 2;
                 cycles_performed+=3;
             }
             else if (*op == 0xd3) //machine specific handling for OUT
             {
-                OutPort(op[1], sim->state->a);
+                OutPort(sim, op[1]);
                 sim->state->pc += 2;
                 cycles_performed+=3;
             }
             else
                 cycles_performed += Emulate8080p(sim->state);
         }
-        // Now done, perform the interrupt and repeat
+        // Now done, perform the interrupt
         if(sim->state->int_enable)
         {
             generate_interrupt(sim->state, sim->whichInterrupt);
@@ -166,14 +139,12 @@ void runFrame()
         }
 
         // Sleep until next 0.5 frame
-       // printf("%d \n", milisPerFrame - (SDL_GetTicks64() - time_now));
-        printf("%d \n", (SDL_GetTicks64() - time_now));
         SDL_Delay(fmax(0LL, milisPerFrame - (SDL_GetTicks64() - time_now)));
     }
 
 }
 
-void doEmulation()
+void doEmulation(SpaceInvadersMachine *sim)
 {
     int quit = 0;
     uint32_t lastTime = 1000 * SDL_GetTicks();
@@ -198,31 +169,30 @@ void doEmulation()
             }
         }	
 
-        runFrame();
+        runFrame(sim);
         DrawGraphics(sim);
 
     }
 }
 
+/*
 int main(int argc, char * argv[])
 {
-    // Make emulator file, load into RAM
+
     sim = (SpaceInvadersMachine *) calloc(1, sizeof(SpaceInvadersMachine));
     sim->state = (State8080*) calloc(1, sizeof(State8080));
     sim->state->memory = malloc(16 * 0x1000);
     sim->state->int_enable = 1;
 
-    //sim->audio_player = (AudioPlayer *) calloc(1, sizeof(AudioPlayer));
-    //sim->audio_player->sounds = malloc(9 * sizeof(Mix_Chunk));
-
     initialise_graphics(sim);
     setupAudio(sim);
     
-    readFile(argv[1], 0);
-    readFile(argv[2], 0x800);
-    readFile(argv[3], 0x1000);
-    readFile(argv[4], 0x1800);
+    readFile(sim->state, argv[1], 0);
+    readFile(sim->state, argv[2], 0x800);
+    readFile(sim->state, argv[3], 0x1000);
+    readFile(sim->state, argv[4], 0x1800);
 
     doEmulation();
 
 }
+*/

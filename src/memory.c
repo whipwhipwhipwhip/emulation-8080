@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "memory.h"
+#include "emulator.h"
 
 #define SpaceInvadersROM 0
 
@@ -47,6 +48,23 @@ void writeMemoryAt(State8080* state, uint16_t address, uint8_t value)
     }
     #endif
     state->memory[address] = value;
+}
+
+void readFile(State8080* state, char* filename, uint32_t offset)
+{
+	FILE *f= fopen(filename, "rb");
+	if (f==NULL)
+	{
+		printf("error: Couldn't open %s\n", filename);
+		exit(1);
+	}
+	fseek(f, 0L, SEEK_END);
+	int fsize = ftell(f);
+	fseek(f, 0L, SEEK_SET);
+	
+	uint8_t *buffer = &state->memory[offset];
+	fread(buffer, fsize, 1, f);
+	fclose(f);
 }
 
 //do I even use this?
