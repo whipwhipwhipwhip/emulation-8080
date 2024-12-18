@@ -3,7 +3,8 @@
 #include<stdint.h>
 #include "emulator.h"
 
-//uint16_t readMemoryAt(State8080* state, uint16_t byte);
+typedef struct State8080 State8080;
+void readFile(State8080* state, char* filename, uint32_t offset);
 
 
 #endif

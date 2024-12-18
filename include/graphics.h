@@ -2,10 +2,9 @@
 #define GRAPHICS_H
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
-#include "machine.h"
 
 
-typedef struct SpaceInvadersMachine;
+typedef struct SpaceInvadersMachine SpaceInvadersMachine;
 typedef struct SDL_Graphics {
 	SDL_Window * window;
     SDL_Renderer * renderer;

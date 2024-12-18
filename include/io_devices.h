@@ -5,10 +5,17 @@
 #include<SDL2/SDL_mixer.h>
 #include "emulator.h"
 
+typedef struct AudioPlayer {
+	const char* soundLocations[9];
+    Mix_Chunk** sounds;
+} AudioPlayer;
+
+typedef struct SpaceInvadersMachine SpaceInvadersMachine;
+
 void processKeyPress(int key, State8080* state);
 void processKeyRelease(int key, State8080* state);
-void playSound(uint8_t soundIndex, int offset);
-void setupAudio();
+void playSound(AudioPlayer* player, uint8_t soundIndex, int offset);
+void setupAudio(SpaceInvadersMachine* sim);
 
 static int NUM_SOUNDS = 9;
 
@@ -24,10 +31,5 @@ const static char* _wavFileNames[] =
     "../../sounds/fastinvader4.wav",
     "../../sounds/ufo_lowpitch.wav"
 };
-
-typedef struct AudioPlayer {
-	const char* soundLocations[9];
-    Mix_Chunk** sounds;
-} AudioPlayer;
 
 #endif
