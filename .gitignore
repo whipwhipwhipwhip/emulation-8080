@@ -17,5 +17,6 @@
 *.hex
 *.o
 *.txt
+*.DS_Store
 
 
