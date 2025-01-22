@@ -1,10 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
-#include <SDL2/SDL_main.h>
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_timer.h>
-#include <SDL2/SDL_video.h>
-#include <SDL2/SDL_render.h>
 #include "graphics.h"
 #include "machine.h"
 #include "memory.h"

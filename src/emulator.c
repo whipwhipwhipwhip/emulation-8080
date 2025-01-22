@@ -856,42 +856,36 @@ int Emulate8080p(State8080* state)
 			   {
 			   uint16_t memloc = (state->h << 8) | state->l;
 			   writeMemoryAt(state, memloc, state->b);
-			   //state->memory[memloc] = state->b;
 			   }
 			   break;
 		case 0x71: // MOV M,C
 			   {
 			   uint16_t memloc = (state->h << 8) | state->l;
 			   writeMemoryAt(state, memloc, state->c);
-			   //state->memory[memloc] = state->c;
 			   }
 			   break;
 		case 0x72: // MOV M,D
 			   {
 			   uint16_t memloc = (state->h << 8) | state->l;
 			   writeMemoryAt(state, memloc, state->d);
-			   //state->memory[memloc] = state->d;
 			   }
 			   break;
 		case 0x73: // MOV M,E
 			   {
 			   uint16_t memloc = (state->h << 8) | state->l;
 			   writeMemoryAt(state, memloc, state->e);
-			   //state->memory[memloc] = state->e;
 			   }
 			   break;
 		case 0x74: // MOV M,H
 			   {
 			   uint16_t memloc = (state->h << 8) | state->l;
 			   writeMemoryAt(state, memloc, state->h);
-			   //state->memory[memloc] = state->h;
 			   }
 			   break;
 		case 0x75: // MOV M,L
 			   {
 			   uint16_t memloc = (state->h << 8) | state->l;
 			   writeMemoryAt(state, memloc, state->l);
-			   //state->memory[memloc] = state->l;
 			   }
 			   break;
 		case 0x76: // HLT
@@ -904,7 +898,6 @@ int Emulate8080p(State8080* state)
 			   {
 			   uint16_t memloc = (state->h << 8) | state->l;
 			   writeMemoryAt(state, memloc, state->a);
-			   //state->memory[memloc] = state->a;
 			   }
 			   break;
 		case 0x78: // MOV A,B
