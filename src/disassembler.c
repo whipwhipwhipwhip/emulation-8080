@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "dissasembler.h"
+#include "disassembler.h"
 
 /*    
 *codebuffer is a valid pointer to 8080 assembly code    

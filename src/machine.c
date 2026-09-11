@@ -74,8 +74,8 @@ void OutPort(SpaceInvadersMachine * sim, uint8_t port_bit)
 void generate_interrupt(State8080* state, int interrupt_num)
 {
     uint16_t push = state->pc;
-	state->memory[state->sp-1] = (push >> 8) & 0xff;
-	state->memory[state->sp-2] = push & 0xff;
+	state->memory[(uint16_t)(state->sp-1)] = (push >> 8) & 0xff;
+	state->memory[(uint16_t)(state->sp-2)] = push & 0xff;
 	state->sp -= 2;
     state->lastSp = state->sp;  
 

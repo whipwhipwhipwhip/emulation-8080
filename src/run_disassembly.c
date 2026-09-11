@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "dissasembler.h"
+#include "disassembler.h"
 
 int main (int argc, char**argv)    
    {

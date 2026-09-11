@@ -1,5 +1,5 @@
-#ifndef DISSASEMBLER_H
-#define DISSASEMBLER_H
+#ifndef DISASSEMBLER_H
+#define DISASSEMBLER_H
 
 int Disassemble8080p(unsigned char *codebuffer, int pc);
 

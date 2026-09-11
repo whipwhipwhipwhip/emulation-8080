@@ -5,18 +5,21 @@
 # Unignore all dirs
 !*/
 ### Above combination will ignore all files without extension ###
+!LICENSE
 
 *.out
 *.swift
+build/
+build_diag/
 *.entitlements
 *.json
-*.cmake
 *.e
 *.f
 *.g
 *.hex
 *.o
-*.txt
 *.DS_Store
 
 
+CLAUDE.md
+*.claude/
